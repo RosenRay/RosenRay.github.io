@@ -19,6 +19,36 @@
       "updateURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
       "downloadURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
       "updatedAt": "2026-08-01"
+    },
+    {
+      "name": "98手机网页浏览助手",
+      "file": "98-mobile-browsing-helper.user.js",
+      "version": "2.4",
+      "description": "98堂手机网页版辅助工具，整合列表去广告、搜索过滤、签到、评分、回复、资源定位和登录辅助。",
+      "installURL": "https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js",
+      "updateURL": "https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js",
+      "downloadURL": "https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js",
+      "updatedAt": "2026-08-01"
+    },
+    {
+      "name": "98论坛搜索增强预览",
+      "file": "98-forum-search-preview.user.js",
+      "version": "2.4.1",
+      "description": "紧凑显示增强搜索数据，支持过滤、浏览记录和通用手机版搜索提示页。",
+      "installURL": "https://rosenray.github.io/userscripts/98-forum-search-preview.user.js",
+      "updateURL": "https://rosenray.github.io/userscripts/98-forum-search-preview.user.js",
+      "downloadURL": "https://rosenray.github.io/userscripts/98-forum-search-preview.user.js",
+      "updatedAt": "2026-08-01"
+    },
+    {
+      "name": "色聚广告过滤",
+      "file": "seju-ad-filter.user.js",
+      "version": "1.0",
+      "description": "过滤色聚网站的置顶推荐广告及最新发布中的外链广告条目。",
+      "installURL": "https://rosenray.github.io/userscripts/seju-ad-filter.user.js",
+      "updateURL": "https://rosenray.github.io/userscripts/seju-ad-filter.user.js",
+      "downloadURL": "https://rosenray.github.io/userscripts/seju-ad-filter.user.js",
+      "updatedAt": "2026-08-01"
     }
   ]
 }
