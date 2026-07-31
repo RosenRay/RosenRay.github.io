@@ -13,8 +13,8 @@
 // @grant        GM_xmlhttpRequest
 // @connect      *
 // @run-at       document-end
-// @updateURL    https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js
-// @downloadURL  https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js
+// @updateURL    https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js
+// @downloadURL  https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js
 // ==/UserScript==
 
 (function () {
