@@ -16,8 +16,8 @@
       "version": "5.6",
       "description": "全面扫描磁力/ED2K 链接，支持页面 TXT 附件快速预览和 btsearch.love 条目信息识别。",
       "installURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
-      "updateURL": "https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js",
-      "downloadURL": "https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js",
+      "updateURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
+      "downloadURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
       "updatedAt": "2026-08-01"
     }
   ]
