@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RosenRay 油猴脚本</title>
+  <meta name="description" content="RosenRay 的个人油猴脚本安装入口。">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --text: #1d232a;
+      --muted: #606b77;
+      --line: #dce1e7;
+      --green: #1f8f64;
+      --blue: #2563eb;
+      --ink: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(28px, 7vw, 42px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 58px;
+      height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(145deg, #ffffff, #edf2f7);
+      color: var(--green);
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .list {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .script {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 19px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .desc {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #f8fafc;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    a.button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      color: #ffffff;
+      background: var(--green);
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    a.secondary {
+      color: var(--blue);
+      background: #eef4ff;
+    }
+
+    footer {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 680px) {
+      main {
+        width: min(100% - 24px, 920px);
+        padding-top: 18px;
+      }
+
+      header {
+        align-items: center;
+      }
+
+      .mark {
+        width: 48px;
+        height: 48px;
+      }
+
+      .script {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      a.button {
+        flex: 1 1 132px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>RosenRay 油猴脚本</h1>
+        <p class="subtitle">手机端可直接打开安装，后续通过脚本版本号自动更新。</p>
+      </div>
+      <div class="mark" aria-hidden="true">JS</div>
+    </header>
+
+    <section class="list" aria-label="脚本列表">
+      <article class="script">
+        <div>
+          <h2>BTSearch 移动端筛选修复 + 磁力直达</h2>
+          <p class="desc">修复筛选后无法再次打开的问题，复制按钮改为磁力直达，并过滤筛选区下方广告。</p>
+          <div class="meta">
+            <span class="pill">版本 1.4.0</span>
+            <span class="pill">Android Edge</span>
+            <span class="pill">自动更新</span>
+          </div>
+        </div>
+        <div class="actions">
+          <a class="button" href="./userscripts/btsearch-mobile-fix.user.js">安装</a>
+          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-mobile-fix.user.js">Raw</a>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      更新源：raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/
+    </footer>
+  </main>
+</body>
+</html>

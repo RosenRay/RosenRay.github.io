@@ -1,0 +1,14 @@
+{
+  "scripts": [
+    {
+      "name": "BTSearch 移动端筛选修复 + 磁力直达",
+      "file": "btsearch-mobile-fix.user.js",
+      "version": "1.4.0",
+      "description": "修复 BTSearch 移动端筛选异常，点击复制按钮时直接拉起磁力下载工具，并过滤搜索结果上方广告。",
+      "installURL": "https://rosenray.github.io/userscripts/btsearch-mobile-fix.user.js",
+      "updateURL": "https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-mobile-fix.user.js",
+      "downloadURL": "https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-mobile-fix.user.js",
+      "updatedAt": "2026-08-01"
+    }
+  ]
+}
