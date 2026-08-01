@@ -33,7 +33,7 @@
     {
       "name": "98论坛搜索增强预览",
       "file": "98-forum-search-preview.user.js",
-      "version": "2.4.1",
+      "version": "2.4.2",
       "description": "紧凑显示增强搜索数据，支持过滤、浏览记录和通用手机版搜索提示页。",
       "installURL": "https://rosenray.github.io/userscripts/98-forum-search-preview.user.js",
       "updateURL": "https://rosenray.github.io/userscripts/98-forum-search-preview.user.js",
