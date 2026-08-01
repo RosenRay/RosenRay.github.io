@@ -33,8 +33,8 @@
     {
       "name": "98论坛快捷导航",
       "file": "98-forum-quick-nav.user.js",
-      "version": "1.0.0",
-      "description": "在 98 手机版论坛首页的综合讨论区下方增加按最新排序的常用版块快捷入口。",
+      "version": "1.0.1",
+      "description": "在 98 手机版论坛首页左侧分类栏下方增加按最新排序的常用版块快捷入口。",
       "installURL": "https://rosenray.github.io/userscripts/98-forum-quick-nav.user.js",
       "updateURL": "https://rosenray.github.io/userscripts/98-forum-quick-nav.user.js",
       "downloadURL": "https://rosenray.github.io/userscripts/98-forum-quick-nav.user.js",
