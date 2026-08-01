@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name 98论坛搜索增强预览
 // @namespace https://plwt.kpqq4.com/
-// @version 2.4.1
+// @version 2.4.2
 // @description 紧凑显示增强搜索数据，支持过滤、浏览记录和通用手机版搜索提示页。
 // @author ChatGPT
 // @match *://plwt.kpqq4.com/search.php*
@@ -951,48 +951,35 @@
   }
 
   function createBottomNav() {
-    const nav = document.createElement("nav");
-    nav.className = "dsp-bottom-nav";
+    const footer = document.createElement("div");
+    const list = document.createElement("ul");
 
-    nav.append(
-      createNavLink(
-        "⌂",
-        "首页",
-        makeMobileUrl("/portal.php?mod=index"),
-        false,
-        true
-      ),
-      createNavLink(
-        "▦",
-        "论坛",
-        makeMobileUrl("/forum.php?forumlist=1"),
-        false,
-        true
-      ),
-      createNavLink("⌕", "搜索", "#", true)
+    footer.className = "footer_menu dsp-site-footer-menu";
+    list.append(
+      createSiteFooterLink("icon-home-o", "首页", "/portal.php?mod=index", false, "⌂"),
+      createSiteFooterLink("icon-menu", "论坛", "/forum.php?forumlist=1", true, "☰")
     );
-    return nav;
+    footer.appendChild(list);
+    return footer;
   }
 
-  function createNavLink( icon, label, href, active = false, mobileTarget = false ) {
+  function createSiteFooterLink(iconClass, label, href, active = false, fallbackIcon = "") {
+    const item = document.createElement("li");
     const link = document.createElement("a");
-    link.className = active ? "dsp-nav-link dsp-active" : "dsp-nav-link";
-    link.href = href;
-    if (mobileTarget) {
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        navigateMobile(href);
-      });
-    }
+    const icon = document.createElement("i");
 
-    const iconElement = document.createElement("span");
-    iconElement.className = "dsp-nav-icon";
-    iconElement.textContent = icon;
+    link.href = makeMobileUrl(href);
+    if (active) link.className = "hover";
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      navigateMobile(link.href);
+    });
 
-    const text = document.createElement("span");
-    text.textContent = label;
-    link.append(iconElement, text);
-    return link;
+    icon.className = `iconfont ${iconClass} f22`;
+    icon.textContent = fallbackIcon;
+    link.append(icon, document.createElement("br"), document.createTextNode(label));
+    item.appendChild(link);
+    return item;
   }
 
   function getKeyword() {
@@ -1376,23 +1363,46 @@
       }
       .dsp-page-info { min-width: 72px; font-weight: 600; }
       .dsp-disabled { color: #b9c0c7; background: #f4f5f6; }
-      .dsp-bottom-nav {
-        position: fixed;
-        z-index: 60;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        height: 50px;
-        padding-bottom: env(safe-area-inset-bottom);
-        border-top: 1px solid #e1e5ea;
-        background: rgba(255, 255, 255, .97);
-        backdrop-filter: blur(12px);
+      #dsp-mobile-app .footer_menu.dsp-site-footer-menu {
+        position: fixed !important;
+        z-index: 60 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        height: calc(50px + env(safe-area-inset-bottom)) !important;
+        padding-bottom: env(safe-area-inset-bottom) !important;
+        border-top: 1px solid #dedede !important;
+        background: #fff !important;
+        box-shadow: 0 -1px 5px rgba(0, 0, 0, .04) !important;
       }
-      .dsp-nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; color: #8a939d; font-size: 11px; line-height: 1.15; text-decoration: none; }
-      .dsp-nav-icon { height: 23px; font-size: 21px; font-weight: 300; line-height: 23px; }
-      .dsp-nav-link.dsp-active { color: #3e8fc9; }
+      #dsp-mobile-app .footer_menu.dsp-site-footer-menu ul {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        height: 50px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+      }
+      #dsp-mobile-app .footer_menu.dsp-site-footer-menu li { min-width: 0 !important; text-align: center !important; }
+      #dsp-mobile-app .footer_menu.dsp-site-footer-menu a {
+        display: block !important;
+        height: 50px !important;
+        padding-top: 5px !important;
+        color: #777 !important;
+        font-size: 12px !important;
+        line-height: 18px !important;
+        text-decoration: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      #dsp-mobile-app .footer_menu.dsp-site-footer-menu a.hover { color: #3e8fc9 !important; }
+      #dsp-mobile-app .footer_menu.dsp-site-footer-menu .iconfont {
+        display: inline-block !important;
+        height: 24px !important;
+        color: inherit !important;
+        font-size: 22px !important;
+        font-style: normal !important;
+        line-height: 24px !important;
+      }
       @media (prefers-color-scheme: dark) {
         html.dsp-mobile-mode,
         html.dsp-mobile-mode body { background: #12171d !important; color: #dce3eb !important; }
@@ -1428,7 +1438,6 @@
         .dsp-page-button,
         .dsp-page-info { border-color: #394654; background: #202a34; color: #c6d1dd; }
         .dsp-disabled { color: #65717d; background: #192129; }
-        .dsp-bottom-nav { border-color: #303b47; background: rgba(25, 33, 41, .97); }
       }
     `);
   }
