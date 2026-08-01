@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         98论坛快捷导航
 // @namespace    https://rosenray.github.io/userscripts
-// @version      1.0.0
-// @description  在 98 手机版论坛首页的综合讨论区下方增加按最新排序的常用版块快捷入口。
+// @version      1.0.1
+// @description  在 98 手机版论坛首页左侧分类栏下方增加按最新排序的常用版块快捷入口。
 // @author       ChatGPT
 // @match        *://*/forum.php*
 // @grant        none
@@ -15,14 +15,16 @@
     "use strict";
 
     const QUICK_NAV_ID = "n98_forum_quick_nav";
-    const TARGET_SELECTOR = "#sub_forum_94 ul";
+    const TARGET_SELECTOR = ".n5_bbsfq ul.tabs";
     const QUICK_LINKS = [
         {
-            label: "综合讨论区 · 最新",
+            title: "综合讨论区",
+            badge: "最新",
             href: "forum.php?mod=forumdisplay&fid=95&filter=author&orderby=dateline&mobile=2",
         },
         {
-            label: "网友原创区 · 最新",
+            title: "网友原创区",
+            badge: "最新",
             href: "forum.php?mod=forumdisplay&fid=141&filter=author&orderby=dateline&mobile=2",
         },
     ];
@@ -40,36 +42,78 @@
     }
 
     /**
-     * Adds two sorted quick links to the 综合讨论区 forum group.
+     * Adds two sorted quick links below the left category list.
      * Duplicate protection keeps MutationObserver reruns idempotent.
      */
     function insertQuickNav() {
-        const list = document.querySelector(TARGET_SELECTOR);
-        if (!list || document.getElementById(QUICK_NAV_ID)) return;
+        const tabs = document.querySelector(TARGET_SELECTOR);
+        if (!tabs || document.getElementById(QUICK_NAV_ID)) return;
 
-        const fragment = document.createDocumentFragment();
-        const marker = document.createElement("li");
-        marker.id = QUICK_NAV_ID;
-        marker.className = "n98_quick_forum_marker";
-        marker.hidden = true;
-        fragment.appendChild(marker);
+        installStyle();
+        const panel = document.createElement("div");
+        panel.id = QUICK_NAV_ID;
+        panel.className = "n98_quick_nav_panel";
 
         QUICK_LINKS.forEach((item) => {
-            const li = document.createElement("li");
             const link = document.createElement("a");
-            const info = document.createElement("i");
+            const title = document.createElement("span");
+            const badge = document.createElement("em");
 
-            li.className = "n98_quick_forum";
-            link.className = "btdb";
+            link.className = "n98_quick_nav_link";
             link.href = item.href;
-            link.textContent = item.label;
-            info.textContent = "按最新发布排序";
+            title.textContent = item.title;
+            badge.textContent = item.badge;
 
-            li.append(link, info);
-            fragment.appendChild(li);
+            link.append(title, badge);
+            panel.appendChild(link);
         });
 
-        list.appendChild(fragment);
+        tabs.insertAdjacentElement("afterend", panel);
+    }
+
+    /**
+     * Provides a local fallback when the mobile theme CSS does not cover injected nodes.
+     */
+    function installStyle() {
+        if (document.getElementById("n98_forum_quick_nav_style")) return;
+
+        const style = document.createElement("style");
+        style.id = "n98_forum_quick_nav_style";
+        style.textContent = `
+            #n98_forum_quick_nav {
+                margin: 8px 0 0;
+                border-top: 1px solid #e5e5e5;
+                background: #f2f2f2;
+            }
+            #n98_forum_quick_nav .n98_quick_nav_link {
+                display: block;
+                box-sizing: border-box;
+                min-height: 50px;
+                padding: 8px 8px 7px 18px;
+                border-bottom: 1px solid #e5e5e5;
+                color: #4b4f55;
+                font-size: 14px;
+                line-height: 1.25;
+                text-decoration: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+            #n98_forum_quick_nav .n98_quick_nav_link:active {
+                background: #fff;
+                color: #2f9bd7;
+            }
+            #n98_forum_quick_nav span,
+            #n98_forum_quick_nav em {
+                display: block;
+                font-style: normal;
+                white-space: nowrap;
+            }
+            #n98_forum_quick_nav em {
+                margin-top: 3px;
+                color: #9aa0a6;
+                font-size: 11px;
+            }
+        `;
+        (document.head || document.documentElement).appendChild(style);
     }
 
     /**
