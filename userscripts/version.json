@@ -21,6 +21,16 @@
       "updatedAt": "2026-08-01"
     },
     {
+      "name": "链接检测 + TXT预览 + LinkHunterBridge",
+      "file": "link-detector-txt-preview-linkhunter-bridge.user.js",
+      "version": "6.2",
+      "description": "在原链接检测和 TXT 预览能力基础上，Android 单条 Magnet/ED2K 打开时通过 LinkHunterBridge 直达 115 下载入口。",
+      "installURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js",
+      "updateURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js",
+      "downloadURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js",
+      "updatedAt": "2026-08-03"
+    },
+    {
       "name": "98手机网页浏览助手",
       "file": "98-mobile-browsing-helper.user.js",
       "version": "2.4",
