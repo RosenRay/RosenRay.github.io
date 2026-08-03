@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         链接检测 + TXT预览 + LinkHunterBridge
+// @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.2
-// @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上通过 LinkHunterBridge 中转唤起下载应用或 115
+// @version      6.3
+// @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       YourName (重构: Claude)
 // @match        *://*/*
 // @grant        GM_setClipboard
@@ -13,8 +13,8 @@
 // @grant        GM_xmlhttpRequest
 // @connect      *
 // @run-at       document-end
-// @updateURL    https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js
-// @downloadURL  https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js
+// @updateURL    https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js
+// @downloadURL  https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js
 // ==/UserScript==
 
 (function () {

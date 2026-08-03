@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      5.6
-// @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；支持 btsearch.love 条目名称与大小识别、空磁力唤起下载器、Hash合成与SPA实时监听
+// @version      6.3
+// @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       YourName (重构: Claude)
 // @match        *://*/*
 // @grant        GM_setClipboard
@@ -569,6 +569,30 @@
         resize: `<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>`,
     };
     const EMPTY_MAGNET_TRIGGER = 'magnet:?xt=urn:btih:';
+    const LINKHUNTER_BRIDGE_OPEN = 'linkhunter://open?mode=115_download&url=';
+
+    function isAndroidDevice() {
+        return /Android/i.test(navigator.userAgent || '');
+    }
+
+    function canUseLinkHunterBridge(link) {
+        return /^(?:magnet:\?|ed2k:\/\/)/i.test(link || '');
+    }
+
+    /**
+     * Android 上优先交给 LinkHunterBridge；其他设备仍走原始协议唤起下载客户端。
+     */
+    function openDownloadLink(link) {
+        if (!canUseLinkHunterBridge(link)) return false;
+        if (isAndroidDevice()) {
+            window.location.href = LINKHUNTER_BRIDGE_OPEN + encodeURIComponent(link);
+            showToast('正在唤起 LinkHunterBridge...');
+            return true;
+        }
+        window.location.href = link;
+        showToast('正在唤起客户端...');
+        return true;
+    }
 
     // ─────────────────────────────────────────────
     //  BTIH Hash 检测与磁力链接合成
@@ -1030,6 +1054,8 @@
         // No visible summary; the copy button and floating badge carry the only count.
     }
     function openDownloader() {
+        const f = getFiltered();
+        if (f.length === 1 && openDownloadLink(f[0])) return;
         window.location.href = EMPTY_MAGNET_TRIGGER;
         showToast('已尝试唤起下载器，可粘贴已复制的链接');
     }
@@ -1041,7 +1067,9 @@
         return true;
     }
     function copyAndOpenDownloader() {
+        const f = getFiltered();
         if (!copyAllLinks()) return;
+        if (f.length === 1 && openDownloadLink(f[0])) return;
         openDownloader();
     }
     function normalizePanelPositionForViewport() {
@@ -1093,14 +1121,12 @@
                 setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.innerHTML = svgIcon(ICONS.copy, 12) + ' 复制'; }, 2000);
             };
             actions.appendChild(copyBtn);
-            // 打开（磁力）
-            if (isMagnet) {
-                const openBtn = document.createElement('button');
-                openBtn.className = 'lh-btn open';
-                openBtn.innerHTML = svgIcon(ICONS.open, 12) + ' 打开';
-                openBtn.onclick = () => { window.location.href = link; showToast('正在唤起客户端…'); };
-                actions.appendChild(openBtn);
-            }
+            // 打开：Android 通过 LinkHunterBridge 中转，其他设备沿用原始协议。
+            const openBtn = document.createElement('button');
+            openBtn.className = 'lh-btn open';
+            openBtn.innerHTML = svgIcon(ICONS.open, 12) + ' 打开';
+            openBtn.onclick = () => openDownloadLink(link);
+            actions.appendChild(openBtn);
             list.appendChild(item);
         });
     }

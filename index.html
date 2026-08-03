@@ -2,310 +2,669 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>RosenRay 油猴脚本</title>
   <meta name="description" content="RosenRay 的个人油猴脚本安装入口。">
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9;
-      --surface: #ffffff;
-      --text: #1d232a;
-      --muted: #606b77;
-      --line: #dce1e7;
-      --green: #1f8f64;
+      --page: #f4f7f4;
+      --paper: #ffffff;
+      --paper-soft: #f9fbf8;
+      --ink: #18201d;
+      --text: #26302c;
+      --muted: #69756f;
+      --line: #d9e1dc;
+      --line-strong: #b7c5bd;
+      --green: #0f766e;
       --blue: #2563eb;
-      --ink: #0f172a;
+      --amber: #b45309;
+      --rose: #be123c;
+      --shadow: 0 14px 34px rgba(24, 32, 29, 0.08);
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      background: var(--bg);
+      background: var(--page);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       line-height: 1.55;
-    }
-
-    main {
-      width: min(920px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 40px;
-    }
-
-    header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 14px 0 20px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    h1 {
-      margin: 0;
-      color: var(--ink);
-      font-size: clamp(28px, 7vw, 42px);
-      line-height: 1.08;
       letter-spacing: 0;
     }
 
-    .subtitle {
-      margin: 9px 0 0;
-      color: var(--muted);
-      font-size: 15px;
+    a {
+      color: inherit;
     }
 
-    .mark {
+    button,
+    a.action {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .shell {
+      width: min(1080px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top)) 0 max(34px, env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
       display: grid;
       place-items: center;
-      flex: 0 0 auto;
-      width: 58px;
-      height: 58px;
+      width: 42px;
+      height: 42px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: linear-gradient(145deg, #ffffff, #edf2f7);
+      background: var(--paper);
       color: var(--green);
       font-weight: 800;
-      font-size: 18px;
+      box-shadow: 0 8px 18px rgba(24, 32, 29, 0.05);
     }
 
-    .list {
-      display: grid;
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .script {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: center;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--surface);
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-    }
-
-    h2 {
+    .brand-title {
       margin: 0;
       color: var(--ink);
-      font-size: 19px;
-      line-height: 1.25;
-      letter-spacing: 0;
+      font-size: 18px;
+      line-height: 1.15;
     }
 
-    .desc {
-      margin: 7px 0 0;
+    .brand-subtitle {
+      margin: 2px 0 0;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 12px;
     }
 
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 26px;
-      padding: 3px 9px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #f8fafc;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: flex-end;
-    }
-
-    a.button {
+    .source-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 42px;
-      padding: 9px 14px;
+      min-height: 36px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
       border-radius: 8px;
-      color: #ffffff;
-      background: var(--green);
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 13px;
       font-weight: 700;
       text-decoration: none;
       white-space: nowrap;
     }
 
-    a.secondary {
-      color: var(--blue);
-      background: #eef4ff;
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+      gap: 18px;
+      align-items: stretch;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
     }
 
-    footer {
-      margin-top: 26px;
+    .hero h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(30px, 7.5vw, 54px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      display: grid;
+      align-content: space-between;
+      gap: 22px;
+      min-height: 220px;
+    }
+
+    .hero-copy p {
+      max-width: 620px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .status-item {
+      min-height: 66px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper-soft);
+    }
+
+    .status-value {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .status-label {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .quick-panel {
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      min-height: 220px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eff6f2;
+    }
+
+    .quick-panel h2 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .quick-panel p {
+      margin: 7px 0 0;
       color: var(--muted);
       font-size: 13px;
     }
 
-    @media (max-width: 680px) {
-      main {
-        width: min(100% - 24px, 920px);
-        padding-top: 18px;
+    .featured-actions {
+      display: grid;
+      gap: 9px;
+    }
+
+    .action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .action.primary {
+      background: var(--green);
+      color: #ffffff;
+      box-shadow: 0 10px 22px rgba(15, 118, 110, 0.2);
+    }
+
+    .action.secondary {
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--green);
+    }
+
+    .catalog {
+      margin-top: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 26px 0 12px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0 8px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--muted);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .tab.is-active {
+      border-color: rgba(15, 118, 110, 0.35);
+      background: #e7f4f1;
+      color: var(--green);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .script-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 0 8px 22px rgba(24, 32, 29, 0.05);
+    }
+
+    .script-card[hidden] {
+      display: none;
+    }
+
+    .script-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .script-icon.search {
+      background: var(--blue);
+    }
+
+    .script-icon.link {
+      background: var(--green);
+    }
+
+    .script-icon.forum {
+      background: var(--amber);
+    }
+
+    .script-icon.clean {
+      background: var(--rose);
+    }
+
+    .script-card h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.28;
+    }
+
+    .desc {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      grid-column: 1 / -1;
+      margin-top: 2px;
+    }
+
+    .card-actions .action {
+      min-height: 42px;
+      font-size: 13px;
+    }
+
+    .note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.58);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .note strong {
+      color: var(--ink);
+    }
+
+    footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 18px, 1080px);
+        padding-top: 10px;
       }
 
-      header {
-        align-items: center;
+      .topbar {
+        align-items: flex-start;
       }
 
-      .mark {
-        width: 48px;
-        height: 48px;
+      .source-link {
+        min-height: 34px;
+        padding: 6px 10px;
       }
 
-      .script {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .hero-copy {
+        min-height: 0;
+      }
+
+      .hero h1 {
+        font-size: clamp(29px, 10vw, 42px);
+      }
+
+      .status-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .status-item {
+        min-height: 58px;
+        padding: 9px 8px;
+      }
+
+      .status-value {
+        font-size: 18px;
+      }
+
+      .quick-panel {
+        min-height: 0;
+      }
+
+      .section-head {
+        display: block;
+        margin-top: 22px;
+      }
+
+      .grid {
         grid-template-columns: 1fr;
       }
 
-      .actions {
-        justify-content: stretch;
+      .script-card {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 13px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .brand-title {
+        font-size: 16px;
       }
 
-      a.button {
-        flex: 1 1 132px;
+      .brand-subtitle {
+        display: none;
+      }
+
+      .card-actions {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <main>
-    <header>
-      <div>
-        <h1>RosenRay 油猴脚本</h1>
-        <p class="subtitle">手机端可直接打开安装，后续通过脚本版本号自动更新。</p>
-      </div>
-      <div class="mark" aria-hidden="true">JS</div>
-    </header>
-
-    <section class="list" aria-label="脚本列表">
-      <article class="script">
+  <main class="shell">
+    <nav class="topbar" aria-label="页面导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">JS</div>
         <div>
-          <h2>BTSearch 移动端筛选修复 + 磁力直达</h2>
-          <p class="desc">修复筛选后无法再次打开的问题，复制按钮改为磁力直达，并过滤筛选区下方广告。</p>
-          <div class="meta">
-            <span class="pill">版本 1.4.0</span>
-            <span class="pill">Android Edge</span>
-            <span class="pill">自动更新</span>
+          <p class="brand-title">RosenRay 油猴脚本</p>
+          <p class="brand-subtitle">GitHub Pages 自动更新源</p>
+        </div>
+      </div>
+      <a class="source-link" href="https://github.com/RosenRay/RosenRay.github.io">仓库</a>
+    </nav>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <div>
+          <h1 id="page-title">手机上也能顺手安装的脚本库</h1>
+          <p>常用油猴脚本集中维护，安装入口固定，后续只要脚本版本号更新，Tampermonkey 就能从这里检查到新版本。</p>
+        </div>
+        <div class="status-strip" aria-label="脚本状态">
+          <div class="status-item">
+            <span class="status-value">6</span>
+            <span class="status-label">展示脚本</span>
+          </div>
+          <div class="status-item">
+            <span class="status-value">6.3</span>
+            <span class="status-label">链接检测</span>
+          </div>
+          <div class="status-item">
+            <span class="status-value">1</span>
+            <span class="status-label">兼容入口</span>
           </div>
         </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/btsearch-mobile-fix.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-mobile-fix.user.js">Raw</a>
-        </div>
-      </article>
-      <article class="script">
+      </div>
+
+      <aside class="quick-panel" aria-label="推荐安装">
         <div>
           <h2>链接检测 + TXT预览</h2>
-          <p class="desc">扫描页面里的磁力/ED2K 链接，支持 TXT 附件预览和 btsearch.love 条目信息识别。</p>
-          <div class="meta">
-            <span class="pill">版本 5.6</span>
-            <span class="pill">全站通用</span>
-            <span class="pill">自动更新</span>
-          </div>
+          <p>已合并 LinkHunterBridge：Android 单条 Magnet/ED2K 可直接中转到 115 下载入口。</p>
         </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/link-detector-txt-preview.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js">Raw</a>
+        <div class="featured-actions">
+          <a class="action primary" href="./userscripts/link-detector-txt-preview.user.js">安装合并版</a>
+          <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js">查看源码</a>
         </div>
-      </article>
-      <article class="script">
+      </aside>
+    </section>
+
+    <section class="catalog" aria-labelledby="catalog-title">
+      <div class="section-head">
         <div>
-          <h2>链接检测 + TXT预览 + LinkHunterBridge</h2>
-          <p class="desc">独立测试版：Android 单条 Magnet/ED2K 打开时先唤起 LinkHunterBridge，再直达 115 下载入口。</p>
-          <div class="meta">
-            <span class="pill">版本 6.2</span>
-            <span class="pill">Android Bridge</span>
-            <span class="pill">自动更新</span>
+          <h2 id="catalog-title">脚本列表</h2>
+          <p>按使用场景筛选，手机端按钮保持大面积点击。</p>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="脚本分类">
+        <button class="tab is-active" type="button" data-filter="all">全部</button>
+        <button class="tab" type="button" data-filter="link">链接检测</button>
+        <button class="tab" type="button" data-filter="forum">98论坛</button>
+        <button class="tab" type="button" data-filter="clean">过滤修复</button>
+      </div>
+
+      <div class="grid">
+        <article class="script-card" data-category="clean">
+          <div class="script-icon search" aria-hidden="true">BT</div>
+          <div>
+            <h3>BTSearch 移动端筛选修复 + 磁力直达</h3>
+            <p class="desc">修复筛选后无法再次打开的问题，复制按钮改为磁力直达，并过滤筛选区下方广告。</p>
+            <div class="badges">
+              <span class="badge">版本 1.4.0</span>
+              <span class="badge">Android Edge</span>
+              <span class="badge">自动更新</span>
+            </div>
           </div>
-        </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/link-detector-txt-preview-linkhunter-bridge.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js">Raw</a>
-        </div>
-      </article>
-      <article class="script">
-        <div>
-          <h2>98手机网页浏览助手</h2>
-          <p class="desc">面向 98 堂手机网页，整合列表去广告、搜索过滤、签到、评分、回复、资源定位和登录辅助。</p>
-          <div class="meta">
-            <span class="pill">版本 2.4</span>
-            <span class="pill">98论坛</span>
-            <span class="pill">自动更新</span>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/btsearch-mobile-fix.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-mobile-fix.user.js">源码</a>
           </div>
-        </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/98-mobile-browsing-helper.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-mobile-browsing-helper.user.js">Raw</a>
-        </div>
-      </article>
-      <article class="script">
-        <div>
-          <h2>98论坛快捷导航</h2>
-          <p class="desc">在手机版论坛首页的综合讨论区下方增加“综合讨论区 · 最新”和“网友原创区 · 最新”快捷入口。</p>
-          <div class="meta">
-            <span class="pill">版本 1.0.1</span>
-            <span class="pill">98论坛</span>
-            <span class="pill">自动更新</span>
+        </article>
+
+        <article class="script-card" data-category="link">
+          <div class="script-icon link" aria-hidden="true">LK</div>
+          <div>
+            <h3>链接检测 + TXT预览</h3>
+            <p class="desc">扫描 Magnet/ED2K，支持 TXT 附件预览、btsearch.love 信息识别，Android 单条链接走 LinkHunterBridge。</p>
+            <div class="badges">
+              <span class="badge">版本 6.3</span>
+              <span class="badge">合并版</span>
+              <span class="badge">自动更新</span>
+            </div>
           </div>
-        </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/98-forum-quick-nav.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-forum-quick-nav.user.js">Raw</a>
-        </div>
-      </article>
-      <article class="script">
-        <div>
-          <h2>98论坛搜索增强预览</h2>
-          <p class="desc">优化 98 论坛搜索结果展示，支持紧凑预览、过滤规则、浏览记录和手机版搜索提示页。</p>
-          <div class="meta">
-            <span class="pill">版本 2.4.2</span>
-            <span class="pill">98论坛</span>
-            <span class="pill">自动更新</span>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/link-detector-txt-preview.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js">源码</a>
           </div>
-        </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/98-forum-search-preview.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-forum-search-preview.user.js">Raw</a>
-        </div>
-      </article>
-      <article class="script">
-        <div>
-          <h2>色聚广告过滤</h2>
-          <p class="desc">过滤色聚站点的置顶推荐广告，以及最新发布列表中的外链广告条目。</p>
-          <div class="meta">
-            <span class="pill">版本 1.0</span>
-            <span class="pill">色聚</span>
-            <span class="pill">自动更新</span>
+        </article>
+
+        <article class="script-card" data-category="forum">
+          <div class="script-icon forum" aria-hidden="true">98</div>
+          <div>
+            <h3>98手机网页浏览助手</h3>
+            <p class="desc">整合列表去广告、搜索过滤、签到、评分、回复、资源定位和登录辅助。</p>
+            <div class="badges">
+              <span class="badge">版本 2.4</span>
+              <span class="badge">98论坛</span>
+              <span class="badge">自动更新</span>
+            </div>
           </div>
-        </div>
-        <div class="actions">
-          <a class="button" href="./userscripts/seju-ad-filter.user.js">安装</a>
-          <a class="button secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/seju-ad-filter.user.js">Raw</a>
-        </div>
-      </article>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/98-mobile-browsing-helper.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-mobile-browsing-helper.user.js">源码</a>
+          </div>
+        </article>
+
+        <article class="script-card" data-category="forum">
+          <div class="script-icon forum" aria-hidden="true">98</div>
+          <div>
+            <h3>98论坛快捷导航</h3>
+            <p class="desc">在手机版论坛首页左侧分类栏下方增加“综合讨论区 · 最新”和“网友原创区 · 最新”入口。</p>
+            <div class="badges">
+              <span class="badge">版本 1.0.1</span>
+              <span class="badge">98论坛</span>
+              <span class="badge">自动更新</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/98-forum-quick-nav.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-forum-quick-nav.user.js">源码</a>
+          </div>
+        </article>
+
+        <article class="script-card" data-category="forum">
+          <div class="script-icon forum" aria-hidden="true">98</div>
+          <div>
+            <h3>98论坛搜索增强预览</h3>
+            <p class="desc">优化 98 论坛搜索结果展示，支持紧凑预览、过滤规则、浏览记录和手机版搜索提示页。</p>
+            <div class="badges">
+              <span class="badge">版本 2.4.2</span>
+              <span class="badge">98论坛</span>
+              <span class="badge">自动更新</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/98-forum-search-preview.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-forum-search-preview.user.js">源码</a>
+          </div>
+        </article>
+
+        <article class="script-card" data-category="clean">
+          <div class="script-icon clean" aria-hidden="true">AD</div>
+          <div>
+            <h3>色聚广告过滤</h3>
+            <p class="desc">过滤色聚站点的置顶推荐广告，以及最新发布列表中的外链广告条目。</p>
+            <div class="badges">
+              <span class="badge">版本 1.0</span>
+              <span class="badge">色聚</span>
+              <span class="badge">自动更新</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/seju-ad-filter.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/seju-ad-filter.user.js">源码</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="note">
+        <strong>兼容说明：</strong>旧的 LinkHunterBridge 独立安装地址仍然保留，但不再作为单独脚本展示；新安装统一使用“链接检测 + TXT预览”。
+      </div>
     </section>
 
     <footer>
-      更新源：raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/
+      更新源：rosenray.github.io/userscripts
     </footer>
   </main>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const cards = document.querySelectorAll('.script-card');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const filter = tab.dataset.filter;
+        tabs.forEach((item) => item.classList.toggle('is-active', item === tab));
+        cards.forEach((card) => {
+          card.hidden = filter !== 'all' && card.dataset.category !== filter;
+        });
+      });
+    });
+  </script>
 </body>
 </html>

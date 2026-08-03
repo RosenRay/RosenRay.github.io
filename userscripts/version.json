@@ -13,21 +13,11 @@
     {
       "name": "链接检测 + TXT预览",
       "file": "link-detector-txt-preview.user.js",
-      "version": "5.6",
-      "description": "全面扫描磁力/ED2K 链接，支持页面 TXT 附件快速预览和 btsearch.love 条目信息识别。",
+      "version": "6.3",
+      "description": "全面扫描磁力/ED2K 链接，支持 TXT 附件预览、btsearch.love 条目信息识别，并在 Android 上通过 LinkHunterBridge 打开单条链接。",
       "installURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
       "updateURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
       "downloadURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js",
-      "updatedAt": "2026-08-01"
-    },
-    {
-      "name": "链接检测 + TXT预览 + LinkHunterBridge",
-      "file": "link-detector-txt-preview-linkhunter-bridge.user.js",
-      "version": "6.2",
-      "description": "在原链接检测和 TXT 预览能力基础上，Android 单条 Magnet/ED2K 打开时通过 LinkHunterBridge 直达 115 下载入口。",
-      "installURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js",
-      "updateURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js",
-      "downloadURL": "https://rosenray.github.io/userscripts/link-detector-txt-preview-linkhunter-bridge.user.js",
       "updatedAt": "2026-08-03"
     },
     {
