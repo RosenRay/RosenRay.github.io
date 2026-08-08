@@ -334,6 +334,10 @@
       background: var(--rose);
     }
 
+    .script-icon.pan {
+      background: #7c3aed;
+    }
+
     .script-card h3 {
       margin: 0;
       color: var(--ink);
@@ -526,6 +530,7 @@
         <button class="tab" type="button" data-filter="link">链接检测</button>
         <button class="tab" type="button" data-filter="forum">98论坛</button>
         <button class="tab" type="button" data-filter="clean">过滤修复</button>
+        <button class="tab" type="button" data-filter="pan">网盘工具</button>
       </div>
 
       <div class="grid">
@@ -611,6 +616,24 @@
           <div class="card-actions">
             <a class="action primary" href="./userscripts/98-search-preview.user.js">安装</a>
             <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-search-preview.user.js">源码</a>
+          </div>
+        </article>
+
+
+        <article class="script-card" data-category="pan">
+          <div class="script-icon pan" aria-hidden="true">📦</div>
+          <div>
+            <h3>115批量解压</h3>
+            <p class="desc">批量解压115网盘压缩包，支持体积校验、解压不全拦截、密码记忆与面板拖拽滑动。</p>
+            <div class="badges">
+              <span class="badge">版本 8.10</span>
+              <span class="badge">115网盘</span>
+              <span class="badge">自动更新</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="action primary" href="./userscripts/115-batch-unzip.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/115-batch-unzip.user.js">源码</a>
           </div>
         </article>
 
