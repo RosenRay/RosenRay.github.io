@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.4
+// @version      6.5
 // @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       YourName (重构: Claude)
 // @match        *://*/*
@@ -393,6 +393,10 @@
             background: #edf7f4 !important;
             color: var(--lh-ed2k, #0f766e) !important;
             border-color: #cfe9e2 !important;
+        }
+        .lh-txt-trigger.scanned {
+            border-color: rgba(15, 118, 110, 0.4) !important;
+            color: var(--lh-ed2k, #0f766e) !important;
         }
 
         /* ══════════════════════════════════════
@@ -1418,16 +1422,18 @@
             if (btn._box && document.body.contains(btn._box)) {
                 btn._box.remove(); btn._box = null;
                 btn.classList.remove('active');
-                btn.innerHTML = svgIcon(ICONS.file, 11) + ' 预览';
+                btn.innerHTML = svgIcon(ICONS.check, 11) + ' 预览';
+            } else if (btn._cachedText !== undefined) {
+                const errorText = this.extractErrorText(btn._cachedText);
+                this.showBox(errorText || btn._cachedText, btn, fileName, btn._cachedEncoding, !!errorText);
             } else {
                 this.fetch(linkEl.href, btn, fileName);
             }
         },
 
-        fetch(url, btn, fileName, isAuto = false) {
+        fetch(url, btn, fileName) {
             btn.classList.add('loading');
             btn.innerHTML = `<span class="lh-spinner" style="width:10px;height:10px;border-width:1.5px;"></span> 加载中`;
-            if (isAuto) showToast(`📄 正在下载 ${fileName}…`, 2000);
 
             GM_xmlhttpRequest({
                 method: 'GET', url, responseType: 'arraybuffer',
@@ -1439,7 +1445,6 @@
                         const { text, encoding } = this.decode(res.response);
                         const errorText = this.extractErrorText(text);
                         this.showBox(errorText || text, btn, fileName, encoding, !!errorText);
-                        if (isAuto) showToast(`✓ ${fileName} 预览已就绪`, 1800);
                     } else {
                         btn.innerHTML = svgIcon(ICONS.file, 11) + ' 预览失败';
                         showToast(`加载失败 (${res.status})`);
@@ -1454,6 +1459,58 @@
                     btn.classList.remove('loading');
                     btn.innerHTML = svgIcon(ICONS.file, 11) + ' 超时';
                     showToast('请求超时，请重试');
+                }
+            });
+        },
+
+        // 静默下载 TXT 附件，提取磁力/ED2K 链接合并到检测结果，不弹出预览框
+        fetchSilent(url, btn, fileName) {
+            btn.classList.add('loading');
+            btn.innerHTML = `<span class="lh-spinner" style="width:10px;height:10px;border-width:1.5px;"></span> 检测中`;
+
+            GM_xmlhttpRequest({
+                method: 'GET', url, responseType: 'arraybuffer',
+                timeout: 20000, anonymous: false,
+                headers: { Referer: location.href, Accept: 'text/plain,*/*' },
+                onload: res => {
+                    btn.classList.remove('loading');
+                    if (res.status >= 200 && res.status < 300) {
+                        const { text, encoding } = this.decode(res.response);
+                        btn._cachedText = text;
+                        btn._cachedEncoding = encoding;
+
+                        // 从 TXT 内容中提取磁力/ED2K 链接
+                        const found = [];
+                        let m;
+                        const mr = makeMagnetReg();
+                        while ((m = mr.exec(text))) found.push(m[0]);
+                        const er = makeEd2kReg();
+                        while ((m = er.exec(text))) found.push(m[0]);
+
+                        if (found.length > 0) {
+                            allLinks = mergeDetectedLinks(allLinks, found);
+                            renderMagnetList();
+                            showToast(`\u2713 从 ${fileName} 检测到 ${found.length} 个链接`, 2000);
+                        } else {
+                            showToast(`\ud83d\udcc4 ${fileName} 未发现链接`, 1800);
+                        }
+
+                        btn.classList.add('scanned');
+                        btn.innerHTML = svgIcon(ICONS.check, 11) + ' 预览';
+                    } else {
+                        btn.innerHTML = svgIcon(ICONS.file, 11) + ' 检测失败';
+                        showToast(`检测失败 (${res.status})`);
+                    }
+                },
+                onerror: () => {
+                    btn.classList.remove('loading');
+                    btn.innerHTML = svgIcon(ICONS.file, 11) + ' 网络错误';
+                    showToast('检测请求出错');
+                },
+                ontimeout: () => {
+                    btn.classList.remove('loading');
+                    btn.innerHTML = svgIcon(ICONS.file, 11) + ' 超时';
+                    showToast('检测请求超时');
                 }
             });
         },
@@ -1582,7 +1639,7 @@
             document.addEventListener('pointerup', () => { drag = false; });
         },
 
-        // 自动下载并预览 TXT 附件（页面加载或磁力面板触发时调用）
+        // 自动下载 TXT 附件并提取链接（不弹出预览框）
         autoFetch() {
             if (this._autoFetching) return;
             this._autoFetching = true;
@@ -1590,17 +1647,17 @@
             this.scanPage();
 
             const triggers = document.querySelectorAll('.lh-txt-trigger');
-            const pending = Array.from(triggers).filter(t => !t._fetched && !(t._box && document.body.contains(t._box)));
+            const pending = Array.from(triggers).filter(t => !t._scanned && !(t._box && document.body.contains(t._box)));
 
             if (pending.length === 0) {
                 this._autoFetching = false;
                 return;
             }
 
-            showToast(`📄 正在下载 ${pending.length} 个 TXT 附件…`, 2500);
+            showToast(`📄 正在检测 ${pending.length} 个 TXT 附件…`, 2500);
             pending.forEach(btn => {
-                btn._fetched = true;
-                this.fetch(btn._linkEl.href, btn, btn._fileName, true);
+                btn._scanned = true;
+                this.fetchSilent(btn._linkEl.href, btn, btn._fileName);
             });
 
             this._autoFetching = false;
