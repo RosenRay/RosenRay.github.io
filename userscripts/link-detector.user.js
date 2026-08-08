@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.8
+// @version      6.9
 // @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       ray
 // @match        *://*/*
@@ -60,6 +60,23 @@
             --lh-radius: 12px;
             --lh-shadow: 0 22px 70px rgba(17,24,39,0.18), 0 8px 26px rgba(17,24,39,0.10);
             --lh-shadow-sm: 0 10px 26px rgba(17,24,39,0.16);
+            /* 语义化按钮色 */
+            --lh-btn-bg: #f5f4f0;
+            --lh-btn-bg-hover: #ece9e2;
+            --lh-positive-bg: #edf7f4;
+            --lh-positive-border: #cfe9e2;
+            --lh-warm-bg: #fff7ed;
+            --lh-warm-bg-hover: #ffedd5;
+            --lh-warm-border: #fed7aa;
+            --lh-invert: #000;
+            /* 蓝色强调（TXT 触发） */
+            --lh-blue: #3b82f6;
+            --lh-blue-text: #60a5fa;
+            --lh-blue-bg: rgba(59,130,246,0.1);
+            --lh-blue-border: rgba(59,130,246,0.35);
+            --lh-blue-bg-hover: rgba(59,130,246,0.22);
+            --lh-blue-border-hover: rgba(59,130,246,0.6);
+            --lh-danger: #dc2626;
         }
 
         /* ══════════════════════════════════════
@@ -83,7 +100,7 @@
         }
         #lh-fab:active { cursor: grabbing; }
         #lh-fab:hover { transform: scale(1.06); box-shadow: 0 12px 32px rgba(17,24,39,0.18); background: rgba(255,255,255,0.92); }
-        #lh-fab.dragging { transition: none; transform: scale(1.1); box-shadow: 0 16px 40px rgba(17,24,39,0.24); cursor: grabbing; background: rgba(255,255,255,0.95); }
+        #lh-fab.dragging { transition: none; transform: scale(1.1); box-shadow: 0 16px 40px rgba(17,24,39,0.24); cursor: grabbing; background: rgba(255,255,255,0.95); animation: none; }
         #lh-fab:active { transform: scale(0.95); }
         #lh-fab.has-links::after {
             content: attr(data-count);
@@ -93,6 +110,15 @@
             min-width: 18px; height: 18px; border-radius: 9px;
             display: flex; align-items: center; justify-content: center;
             padding: 0 4px; border: 2px solid white;
+        }
+        /* 有链接时：FAB 呼吸光晕提醒 */
+        #lh-fab.has-links {
+            box-shadow: 0 0 0 0 rgba(15,118,110,0.45), var(--lh-shadow-sm);
+            animation: lh-fab-glow 2.4s ease-in-out infinite;
+        }
+        @keyframes lh-fab-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(15,118,110,0.40), var(--lh-shadow-sm); }
+            50%      { box-shadow: 0 0 0 9px rgba(15,118,110,0), var(--lh-shadow-sm); }
         }
 
         /* ══════════════════════════════════════
@@ -159,6 +185,18 @@
             display: flex; align-items: center;
             justify-content: flex-end; gap: 8px;
         }
+        /* 标题栏实时统计 */
+        #lh-summary {
+            flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+            font-size: 12px; color: var(--lh-muted);
+            overflow: hidden; white-space: nowrap;
+        }
+        #lh-summary .lh-sum-item { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+        #lh-summary .lh-sum-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        #lh-summary .lh-sum-dot.magnet { background: var(--lh-ed2k); }
+        #lh-summary .lh-sum-dot.ed2k { background: var(--lh-warm); }
+        #lh-summary .lh-sum-num { font-weight: 750; color: var(--lh-text); }
+        #lh-summary .lh-sum-empty { color: var(--lh-dim); font-weight: 500; }
         #lh-header-actions { display: flex; gap: 4px; align-items: center; }
         .lh-icon-btn {
             background: transparent;
@@ -190,7 +228,7 @@
             transition: background 0.12s, border-color 0.12s, transform 0.12s;
         }
         .lh-item + .lh-item { margin-top: 8px; }
-        .lh-item:hover { background: #fff; border-color: rgba(17,24,39,0.14); }
+        .lh-item:hover { background: var(--lh-surface); border-color: rgba(17,24,39,0.14); }
         .lh-item:active { transform: scale(0.992); }
         .lh-item-top { display: flex; align-items: flex-start; gap: 9px; }
         .lh-item-name { font-size: 13px; color: var(--lh-text); line-height: 1.45; flex: 1; min-width: 0; word-break: break-all; cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: -2px -4px; transition: background 0.12s; }
@@ -217,11 +255,11 @@
             display: flex; align-items: center; justify-content: center;
             gap: 4px; font-family: inherit; outline: none;
         }
-        .lh-btn.copy { background: #f5f4f0; color: var(--lh-text); border: 1px solid rgba(17,24,39,0.08); }
-        .lh-btn.copy:hover { background: #ece9e2; }
-        .lh-btn.copy.copied { background: #edf7f4; color: var(--lh-ed2k); border-color: #cfe9e2; }
-        .lh-btn.open { background: #fff7ed; color: var(--lh-warm); border: 1px solid #fed7aa; }
-        .lh-btn.open:hover { background: #ffedd5; }
+        .lh-btn.copy { background: var(--lh-btn-bg); color: var(--lh-text); border: 1px solid rgba(17,24,39,0.08); }
+        .lh-btn.copy:hover { background: var(--lh-btn-bg-hover); }
+        .lh-btn.copy.copied { background: var(--lh-positive-bg); color: var(--lh-ed2k); border-color: var(--lh-positive-border); }
+        .lh-btn.open { background: var(--lh-warm-bg); color: var(--lh-warm); border: 1px solid var(--lh-warm-border); }
+        .lh-btn.open:hover { background: var(--lh-warm-bg-hover); }
 
         /* 空状态 */
         #lh-empty {
@@ -249,7 +287,7 @@
             display: flex; align-items: center; justify-content: center; gap: 6px;
             white-space: nowrap;
         }
-        .lh-footer-btn:hover { background: #fff; border-color: rgba(17,24,39,0.22); }
+        .lh-footer-btn:hover { background: var(--lh-surface); border-color: rgba(17,24,39,0.22); }
         #lh-btn-copy-open {
             grid-column: 1 / -1;
             min-height: 48px;
@@ -258,10 +296,10 @@
             border-color: var(--lh-text);
             box-shadow: 0 10px 24px rgba(17,24,39,0.14);
         }
-        #lh-btn-copy-open:hover { background: #000; }
+        #lh-btn-copy-open:hover { background: var(--lh-invert); }
         #lh-btn-open-downloader {
-            background: #edf7f4; color: var(--lh-ed2k);
-            border-color: #cfe9e2;
+            background: var(--lh-positive-bg); color: var(--lh-ed2k);
+            border-color: var(--lh-positive-border);
         }
         #lh-btn-open-downloader:hover { background: #e0f2ed; border-color: #b8ddd4; }
 
@@ -271,12 +309,13 @@
             transform: translateX(-50%) translateY(-12px);
             background: rgba(17,24,39,0.94); color: white;
             padding: 9px 18px; border-radius: 20px;
-            z-index: 2147483647; font-size: 13px;
+            z-index: 2147483647; font-size: 13px; line-height: 1.5;
             font-family: 'SF Pro Display','PingFang SC',sans-serif;
             border: 1px solid rgba(255,255,255,0.12);
             box-shadow: 0 8px 32px rgba(17,24,39,0.22);
             opacity: 0; pointer-events: none;
-            transition: opacity 0.2s, transform 0.2s; white-space: nowrap;
+            transition: opacity 0.2s, transform 0.2s;
+            white-space: nowrap; max-width: min(88vw, 380px);
         }
         #lh-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -316,7 +355,7 @@
             #lh-footer { position: sticky; bottom: 0; }
             .lh-footer-btn { min-height: 48px; font-size: 14px; }
             #lh-btn-copy-open { min-height: 52px; }
-            #lh-toast { bottom: calc(88px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+            #lh-toast { top: auto; bottom: calc(88px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
 
             /* TXT 预览框：移动端全屏底部抽屉 */
             .lh-txt-box {
@@ -386,9 +425,9 @@
             margin-left: 8px !important;
             padding: 2px 8px !important;
             border-radius: 4px !important;
-            border: 1px solid rgba(59,130,246,0.35) !important;
-            background: rgba(59,130,246,0.1) !important;
-            color: #60a5fa !important;
+            border: 1px solid var(--lh-blue-border) !important;
+            background: var(--lh-blue-bg) !important;
+            color: var(--lh-blue-text) !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             cursor: pointer !important;
@@ -400,8 +439,8 @@
             font-family: 'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif !important;
         }
         .lh-txt-trigger:hover {
-            background: rgba(59,130,246,0.22) !important;
-            border-color: rgba(59,130,246,0.6) !important;
+            background: var(--lh-blue-bg-hover) !important;
+            border-color: var(--lh-blue-border-hover) !important;
         }
         .lh-txt-trigger.loading {
             color: var(--lh-muted, #64748b) !important;
@@ -410,9 +449,9 @@
             pointer-events: none !important;
         }
         .lh-txt-trigger.active {
-            background: #edf7f4 !important;
+            background: var(--lh-positive-bg) !important;
             color: var(--lh-ed2k, #0f766e) !important;
-            border-color: #cfe9e2 !important;
+            border-color: var(--lh-positive-border) !important;
         }
         .lh-txt-trigger.scanned {
             border-color: rgba(15, 118, 110, 0.4) !important;
@@ -455,27 +494,27 @@
             flex-shrink: 0;
             padding: 4px 10px; border-radius: 5px;
             border: 1px solid var(--lh-accent-glow);
-            background: #f5f4f0; color: var(--lh-text);
+            background: var(--lh-btn-bg); color: var(--lh-text);
             font-size: 11px; font-weight: 600;
             cursor: pointer; transition: all 0.15s;
             font-family: inherit; outline: none;
             display: flex; align-items: center; gap: 4px;
             white-space: nowrap;
         }
-        .lh-txt-copy-btn:hover { background: #ece9e2; }
-        .lh-txt-copy-btn.copied { background: #edf7f4; color: var(--lh-ed2k); border-color: #cfe9e2; }
+        .lh-txt-copy-btn:hover { background: var(--lh-btn-bg-hover); }
+        .lh-txt-copy-btn.copied { background: var(--lh-positive-bg); color: var(--lh-ed2k); border-color: var(--lh-positive-border); }
 
         /* 编码标记 */
         .lh-txt-header .lh-txt-enc {
             flex-shrink: 0;
             font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
             padding: 2px 5px; border-radius: 4px;
-            background: #fff7ed; color: var(--lh-warm);
-            border: 1px solid #fed7aa;
+            background: var(--lh-warm-bg); color: var(--lh-warm);
+            border: 1px solid var(--lh-warm-border);
         }
         .lh-txt-header .lh-txt-enc.utf8 {
-            background: #edf7f4; color: var(--lh-ed2k);
-            border-color: #cfe9e2;
+            background: var(--lh-positive-bg); color: var(--lh-ed2k);
+            border-color: var(--lh-positive-border);
         }
 
         /* 统计数字：顶栏中段，弹性占满剩余空间 */
@@ -507,7 +546,7 @@
             font-family: 'SF Pro Display','PingFang SC',sans-serif;
         }
         .lh-txt-body .lh-txt-error {
-            color: #dc2626; font-family: 'SF Pro Display','PingFang SC',sans-serif;
+            color: var(--lh-danger); font-family: 'SF Pro Display','PingFang SC',sans-serif;
         }
 
         /* 调整大小手柄 */
@@ -583,6 +622,7 @@
     }
     const ICONS = {
         search: `<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>`,
+        magnet: `<path d="M21 4v6a5 5 0 0 1-5 5h-3v-4h3a1 1 0 0 0 1-1V4z"/><path d="M3 4v6a5 5 0 0 0 5 5h3v-4H8a1 1 0 0 1-1-1V4z"/>`,
         refresh: `<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>`,
         settings: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>`,
         close: `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`,
@@ -610,11 +650,9 @@
         if (!canUseLinkHunterBridge(link)) return false;
         if (isAndroidDevice()) {
             window.location.href = LINKHUNTER_BRIDGE_OPEN + encodeURIComponent(link);
-            showToast('正在唤起 LinkHunterBridge...');
             return true;
         }
         window.location.href = link;
-        showToast('正在唤起客户端...');
         return true;
     }
 
@@ -987,7 +1025,7 @@
     // ─────────────────────────────────────────────
     const fab = document.createElement('button');
     fab.id = 'lh-fab';
-    fab.innerHTML = svgIcon(ICONS.search, 20);
+    fab.innerHTML = svgIcon(ICONS.magnet, 20);
     fab.setAttribute('aria-label', '链接检测'); fab.title = '链接检测';
     if (!CFG.btnVisible) fab.style.display = 'none';
     // 恢复上次拖拽后的位置
@@ -1005,6 +1043,7 @@
         <div id="lh-scanning"><div class="lh-spinner"></div><span id="lh-scan-text">正在扫描页面…</span></div>
         <div id="lh-drag-handle">
             <div id="lh-header">
+                <span id="lh-summary"></span>
                 <div id="lh-header-actions">
                     <button class="lh-icon-btn" id="lh-btn-refresh" title="重新扫描">${svgIcon(ICONS.refresh)}</button>
                     <button class="lh-icon-btn" id="lh-btn-settings" title="设置">${svgIcon(ICONS.settings)}</button>
@@ -1082,7 +1121,17 @@
         document.getElementById('lh-copy-all-label').textContent = `复制全部 (${f.length})`;
     }
     function updateSummary() {
-        // No visible summary; the copy button and floating badge carry the only count.
+        const el = document.getElementById('lh-summary');
+        if (!el) return;
+        if (!allLinks.length) {
+            el.innerHTML = `<span class="lh-sum-empty">未检测到链接</span>`;
+            return;
+        }
+        let m = 0, e = 0;
+        for (const l of allLinks) { if (l.startsWith('magnet:?')) m++; else e++; }
+        el.innerHTML =
+            (m ? `<span class="lh-sum-item"><span class="lh-sum-dot magnet"></span>磁力 <span class="lh-sum-num">${m}</span></span>` : '') +
+            (e ? `<span class="lh-sum-item"><span class="lh-sum-dot ed2k"></span>ED2K <span class="lh-sum-num">${e}</span></span>` : '');
     }
     function openDownloader() {
         const f = getFiltered();
