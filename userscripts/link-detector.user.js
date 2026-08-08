@@ -69,21 +69,21 @@
             position: fixed;
             bottom: max(24px, env(safe-area-inset-bottom)); right: 16px;
             z-index: 2147483640;
-            width: 54px; height: 54px;
+            width: 48px; height: 48px;
             border-radius: 50%; border: 1px solid rgba(17,24,39,0.10);
             cursor: grab;
-            background: rgba(255,255,255,0.94);
+            background: rgba(255,255,255,0.82);
             box-shadow: var(--lh-shadow-sm);
             color: var(--lh-text);
             display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
             -webkit-tap-highlight-color: transparent; outline: none;
             touch-action: none;
             user-select: none; -webkit-user-select: none;
         }
         #lh-fab:active { cursor: grabbing; }
-        #lh-fab:hover { transform: scale(1.06); box-shadow: 0 12px 32px rgba(17,24,39,0.18); }
-        #lh-fab.dragging { transition: none; transform: scale(1.1); box-shadow: 0 16px 40px rgba(17,24,39,0.24); cursor: grabbing; }
+        #lh-fab:hover { transform: scale(1.06); box-shadow: 0 12px 32px rgba(17,24,39,0.18); background: rgba(255,255,255,0.92); }
+        #lh-fab.dragging { transition: none; transform: scale(1.1); box-shadow: 0 16px 40px rgba(17,24,39,0.24); cursor: grabbing; background: rgba(255,255,255,0.95); }
         #lh-fab:active { transform: scale(0.95); }
         #lh-fab.has-links::after {
             content: attr(data-count);
@@ -193,7 +193,8 @@
         .lh-item:hover { background: #fff; border-color: rgba(17,24,39,0.14); }
         .lh-item:active { transform: scale(0.992); }
         .lh-item-top { display: flex; align-items: flex-start; gap: 9px; }
-        .lh-item-name { font-size: 13px; color: var(--lh-text); line-height: 1.45; flex: 1; min-width: 0; word-break: break-all; }
+        .lh-item-name { font-size: 13px; color: var(--lh-text); line-height: 1.45; flex: 1; min-width: 0; word-break: break-all; cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: -2px -4px; transition: background 0.12s; }
+        .lh-item-name:active { background: rgba(17,24,39,0.05); }
         .lh-filename { font-weight: 660; color: var(--lh-text); }
         .lh-item-meta {
             margin-top: 4px; display: flex; align-items: center; gap: 6px;
@@ -266,8 +267,8 @@
 
         /* Toast */
         #lh-toast {
-            position: fixed; bottom: 100px; left: 50%;
-            transform: translateX(-50%) translateY(12px);
+            position: fixed; top: max(18px, env(safe-area-inset-top)); left: 50%;
+            transform: translateX(-50%) translateY(-12px);
             background: rgba(17,24,39,0.94); color: white;
             padding: 9px 18px; border-radius: 20px;
             z-index: 2147483647; font-size: 13px;
@@ -1118,7 +1119,7 @@
         panel.style.right = '';
         panel.style.bottom = '';
         panel.style.top = '';
-        const y = Math.max(MARGIN, pos.y + 54 + 14);
+        const y = Math.max(MARGIN, pos.y + 48 + 14);
         panel.style.bottom = y + 'px';
         if (pos.side === 'left') {
             panel.style.left = MARGIN + 'px';
@@ -1128,6 +1129,7 @@
             panel.style.left = 'auto';
         }
     }
+    let lastRenderFingerprint = ''; // 渲染指纹：链接无变化时跳过全量重建
     function renderMagnetList() {
         const list = document.getElementById('lh-list');
         const filtered = getFiltered();
@@ -1135,11 +1137,15 @@
                             : fab.classList.remove('has-links');
         updateCopyLabel();
         updateSummary();
+        const fp = filtered.length === 0 ? 'empty' : filtered.join('|');
+        if (fp === lastRenderFingerprint && list.childElementCount > 0) return;
+        lastRenderFingerprint = fp;
         list.innerHTML = '';
         if (filtered.length === 0) {
             list.innerHTML = `<div id="lh-empty"><div class="lh-empty-icon">🔍</div><div class="lh-empty-text">未找到磁力或 ED2K 链接</div></div>`;
             return;
         }
+        const frag = document.createDocumentFragment();
         filtered.forEach((link, idx) => {
             const isMagnet = link.startsWith('magnet:?');
             const type = isMagnet ? 'magnet' : 'ed2k';
@@ -1151,7 +1157,7 @@
             const item = document.createElement('div'); item.className = 'lh-item';
             item.innerHTML = `
                 <div class="lh-item-top">
-                    <div class="lh-item-name">
+                    <div class="lh-item-name" data-link="${escapeHtml(link)}">
                         <div class="lh-filename">${idx+1}. ${escapeHtml(displayName)}</div>
                         ${sizeText ? `<div class="lh-item-meta"><span class="lh-item-size">大小 ${escapeHtml(sizeText)}</span></div>` : ''}
                     </div>
@@ -1176,8 +1182,15 @@
             openBtn.innerHTML = svgIcon(ICONS.open, 12) + ' 打开';
             openBtn.onclick = () => openDownloadLink(link);
             actions.appendChild(openBtn);
-            list.appendChild(item);
+            // 移动端/桌面：点击名称区域即可复制该条链接
+            const nameEl = item.querySelector('.lh-item-name');
+            nameEl.addEventListener('click', () => {
+                copyText(link + '\n');
+                showToast('✓ 已复制');
+            });
+            frag.appendChild(item);
         });
+        list.appendChild(frag);
     }
     // ─────────────────────────────────────────────
     //  SPA 剪贴板拦截模块
@@ -1363,7 +1376,7 @@
     let fabWasDragged = false; // 拖拽后抑制误触发的 click 打开面板
     (function () {
         let drag = false, moved = false, sx, sy, ox, oy;
-        const FAB_SIZE = 54, MARGIN = 16, DRAG_THRESHOLD = 8;
+        const FAB_SIZE = 48, MARGIN = 16, DRAG_THRESHOLD = 8;
         fab.addEventListener('pointerdown', e => {
             if (e.button !== undefined && e.button !== 0) return;
             drag = true; moved = false;
