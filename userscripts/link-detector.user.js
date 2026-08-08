@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.7
+// @version      6.8
 // @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       ray
 // @match        *://*/*
