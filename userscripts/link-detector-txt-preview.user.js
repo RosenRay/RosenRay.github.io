@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.5
+// @version      6.6
 // @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       YourName (重构: Claude)
 // @match        *://*/*
@@ -1038,7 +1038,7 @@
     // ─────────────────────────────────────────────
     //  磁力面板状态与渲染
     // ─────────────────────────────────────────────
-    let allLinks = [], toastTimer = null, hasScannedOnce = false;
+    let allLinks = [], txtExtractedLinks = [], toastTimer = null, hasScannedOnce = false;
     let suppressOutsideClose = false; // SPA 批量模拟点击期间禁止"点击外部关闭面板"
     let suppressLiveRescan   = false; // SPA 批量模拟点击期间禁止 liveObserver 触发重扫覆盖结果
 
@@ -1254,7 +1254,7 @@
             // 阶段一：正则扫描全页面
             scanText.textContent = '正在扫描页面…';
             await new Promise(r => setTimeout(r, 60));
-            allLinks = scanMagnetLinks();
+            allLinks = mergeDetectedLinks(scanMagnetLinks(), txtExtractedLinks);
             hasScannedOnce = true;
 
             // 阶段二：发现复制按钮则进入剪贴板拦截模式
@@ -1288,7 +1288,7 @@
         const prevCount = allLinks.length;
         const domLinks = scanMagnetLinks();
         // 保留上次通过剪贴板拦截收集的 SPA 链接，并优先使用带条目名称的版本。
-        allLinks = mergeDetectedLinks(domLinks, spaCapture.captured);
+        allLinks = mergeDetectedLinks(domLinks, spaCapture.captured, txtExtractedLinks);
         hasScannedOnce = true;
         renderMagnetList();
         if (allLinks.length > prevCount) {
@@ -1488,7 +1488,8 @@
                         while ((m = er.exec(text))) found.push(m[0]);
 
                         if (found.length > 0) {
-                            allLinks = mergeDetectedLinks(allLinks, found);
+                            txtExtractedLinks = mergeDetectedLinks(txtExtractedLinks, found);
+                            allLinks = mergeDetectedLinks(scanMagnetLinks(), spaCapture.captured || [], txtExtractedLinks);
                             renderMagnetList();
                             showToast(`\u2713 从 ${fileName} 检测到 ${found.length} 个链接`, 2000);
                         } else {
