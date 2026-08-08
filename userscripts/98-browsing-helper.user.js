@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         98手机网页浏览助手
 // @namespace    http://tampermonkey.net/
-// @version      2.5.3
-// @description  98堂手机网页版辅助工具：屏蔽帖子列表首条广告、隐藏置顶帖、优化排序文字、复制代码、搜索过滤、自动签到、一键评分、一键回复、回复后刷新隐藏内容、资源定位、自动登录、置顶修复 - UI增强版
+// @version      2.5.4
+// @description  98堂手机网页版辅助工具：屏蔽帖子列表首条广告、隐藏置顶帖、优化排序文字、复制代码、自动签到、一键评分、一键回复、回复后刷新隐藏内容、资源定位、自动登录、置顶修复 - UI增强版
 // @author       ray
 // @license      MIT
 // @match        *://*/portal.php*
@@ -40,11 +40,9 @@
         "辛苦整理，支持一下",
     ];
 
-    // 默认搜索排除关键词
-    const DEFAULT_SEARCH_KEYWORDS = ["求", "约定", "SHA1"];
-
     // 默认资源定位关键词
     const DEFAULT_RESOURCE_KEYWORDS = [
+        "查看本帖隐藏内容",
         "复制代码",
         ".txt",
         ".zip",
@@ -91,6 +89,12 @@
     // 是否为论坛帖子列表页（forumdisplay）
     const IS_FORUM_DISPLAY =
         IS_FORUM && new URLSearchParams(location.search).get("mod") === "forumdisplay";
+
+    // 尽早用 CSS 隐藏顶部/底部广告，避免渲染后再被 JS 移除造成"闪现"
+    // 说明：display:none 在样式应用帧即生效，比等待 DOM 就绪后 remove() 更早、更平滑
+    GM_addStyle(`
+        div.show-text.cl { display: none !important; }
+    `);
 
 
     /* ============================================================
@@ -556,19 +560,6 @@
         return false;
     }
 
-    /**
-     * 函数防抖
-     * @param {Function} fn 目标函数
-     * @param {number} delay 延迟毫秒
-     */
-    function debounce(fn, delay = 200) {
-        let timer = null;
-        return function (...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => fn.apply(this, args), delay);
-        };
-    }
-
 
     /* ============================================================
      * 三、功能模块
@@ -579,7 +570,7 @@
 
     /**
      * 首页顶部工具栏 + 设置中心抽屉面板
-     * 工具栏：设置中心入口、搜索过滤开关、自动签到
+     * 工具栏：设置中心入口、自动签到
      * 设置中心：集中管理所有配置项（关键词、回复文案、自动登录）
      */
     function initPortalButtons() {
@@ -703,21 +694,6 @@
         settingsBtn.innerHTML = `<svg viewBox="0 0 1024 1024"><path d="M512 64C264.8 64 64 264.8 64 512s200.8 448 448 448 448-200.8 448-448S759.2 64 512 64z m219.2 552.8l32 55.2-80 80-55.2-32c-26.4 14.4-55.2 25.6-84.8 32L528 856h-32l-15.2-103.2c-30.4-6.4-58.4-17.6-84.8-32l-55.2 32-80-80 32-55.2c-14.4-26.4-25.6-55.2-32-84.8L168 520v-32l103.2-15.2c6.4-30.4 17.6-58.4 32-84.8l-32-55.2 80-80 55.2 32c26.4-14.4 55.2-25.6 84.8-32L496 168h32l15.2 103.2c30.4 6.4 58.4 17.6 84.8 32l55.2-32 80 80-32 55.2c14.4 26.4 25.6 55.2 32 84.8L856 496v32l-103.2 15.2c-6.4 29.6-17.6 58.4-32 84.8zM512 384c-70.4 0-128 57.6-128 128s57.6 128 128 128 128-57.6 128-128-57.6-128-128-128z" fill="currentColor"/></svg>设置中心`;
         settingsBtn.addEventListener("click", openSettingsDrawer);
 
-        // 搜索过滤开关
-        const filterEnabled = GM_getValue("searchFilterEnabled", true);
-        const toggleWrap = document.createElement("div");
-        toggleWrap.className = "n98_toggle";
-        toggleWrap.innerHTML = `
-            <span>过滤</span>
-            <div class="n98_toggle_switch ${filterEnabled ? "on" : ""}" id="n98_filter_toggle"></div>
-        `;
-        toggleWrap.querySelector("#n98_filter_toggle").addEventListener("click", function () {
-            const newState = !GM_getValue("searchFilterEnabled", true);
-            GM_setValue("searchFilterEnabled", newState);
-            this.classList.toggle("on", newState);
-            showAlert.success("搜索过滤功能已" + (newState ? "开启" : "关闭"), 2000);
-        });
-
         // 自动签到按钮
         const signBtn = document.createElement("button");
         signBtn.className = "n98_toolbar_btn n98_toolbar_btn-danger";
@@ -746,7 +722,6 @@
         });
 
         toolbar.appendChild(settingsBtn);
-        toolbar.appendChild(toggleWrap);
         toolbar.appendChild(signBtn);
         parent.insertBefore(toolbar, parent.firstChild);
 
@@ -763,7 +738,6 @@
 
             // 读取当前配置
             const cfg = {
-                search_keywords: GM_getValue("search_keywords", DEFAULT_SEARCH_KEYWORDS),
                 resource_keywords: GM_getValue("resource_keywords", DEFAULT_RESOURCE_KEYWORDS),
                 replyTexts: GM_getValue("replyTexts", DEFAULT_REPLY_TEXTS),
                 username: GM_getValue("username", ""),
@@ -787,11 +761,6 @@
                         <div class="n98_drawer_section_title">
                             <svg viewBox="0 0 1024 1024"><path d="M944 416h-64l-24-58.4 45-45c8.8-8.8 8.8-23.2 0-32l-88-88c-8.8-8.8-23.2-8.8-32 0l-45 45L681 224V160c0-13.6-10.4-24-24-24h-176c-13.6 0-24 10.4-24 24v64l-58.4 24-45-45c-8.8-8.8-23.2-8.8-32 0l-88 88c-8.8 8.8-8.8 23.2 0 32l45 45L249 416h-64c-13.6 0-24 10.4-24 24v176c0 13.6 10.4 24 24 24h64l24 58.4-45 45c-8.8 8.8-8.8 23.2 0 32l88 88c8.8 8.8 23.2 8.8 32 0l45-45 58.4 24v64c0 13.6 10.4 24 24 24h176c13.6 0 24-10.4 24-24v-64l58.4-24 45 45c8.8 8.8 23.2 8.8 32 0l88-88c8.8-8.8 8.8-23.2 0-32l-45-45 24-58.4h64c13.6 0 24-10.4 24-24V440c0-13.6-10.4-24-24-24zM512 656c-80 0-144-64-144-144s64-144 144-144 144 64 144 144-64 144-144 144z" fill="currentColor"/></svg>
                             关键词配置
-                        </div>
-                        <div class="n98_drawer_field">
-                            <label>搜索排除关键词（逗号分隔）</label>
-                            <textarea id="n98_cfg_search_keywords">${cfg.search_keywords.join(",")}</textarea>
-                            <div class="n98_drawer_field_hint">搜索结果含这些词的帖子将被隐藏</div>
                         </div>
                         <div class="n98_drawer_field">
                             <label>资源定位关键词（逗号分隔）</label>
@@ -870,7 +839,6 @@
 
             // 保存配置
             drawer.querySelector(".n98_drawer_btn-save").addEventListener("click", () => {
-                const searchKeywords = parseInputToArray(drawer.querySelector("#n98_cfg_search_keywords").value);
                 const resourceKeywords = parseInputToArray(drawer.querySelector("#n98_cfg_resource_keywords").value);
                 const replyTexts = parseInputToArray(drawer.querySelector("#n98_cfg_reply_texts").value);
 
@@ -879,7 +847,6 @@
                     return;
                 }
 
-                GM_setValue("search_keywords", searchKeywords);
                 GM_setValue("resource_keywords", resourceKeywords);
                 GM_setValue("replyTexts", replyTexts);
                 GM_setValue("username", drawer.querySelector("#n98_cfg_username").value);
@@ -901,7 +868,6 @@
                     danger: true,
                 }).then((ok) => {
                     if (!ok) return;
-                    GM_setValue("search_keywords", DEFAULT_SEARCH_KEYWORDS);
                     GM_setValue("resource_keywords", DEFAULT_RESOURCE_KEYWORDS);
                     GM_setValue("replyTexts", DEFAULT_REPLY_TEXTS);
                     GM_setValue("username", "");
@@ -967,100 +933,6 @@
                 }, 500);
             });
         });
-    }
-
-    /* ---------- 模块3：搜索助手（search.php / home.php） ---------- */
-
-    /**
-     * 在搜索/我的页面添加排除关键词 checkbox
-     * 勾选后自动隐藏包含对应关键词的帖子，支持开关控制
-     */
-    function initSearchHelper() {
-        if (!IS_SEARCH && !IS_HOME) return;
-
-        // 检查搜索过滤开关是否开启
-        const searchFilterEnabled = GM_getValue("searchFilterEnabled", true);
-
-        const excludes = {
-            description: "排除关键词",
-            keywords: GM_getValue("search_keywords", DEFAULT_SEARCH_KEYWORDS),
-        };
-
-        // 从缓存获取已勾选状态
-        let checkedList = GM_getValue("checkedList") || [];
-        if (!Array.isArray(checkedList)) checkedList = [];
-
-        if (searchFilterEnabled) {
-            createExcludesWrapper();
-            removeDuplicateWrappers();
-        } else {
-            // 开关关闭时，恢复所有被隐藏的搜索结果
-            document.querySelectorAll(".threadlist ul li").forEach((item) => {
-                item.style.removeProperty("display");
-            });
-        }
-
-        // 添加排除关键字区块
-        function createExcludesWrapper() {
-            const excludesWrapper = document.createElement("div");
-            excludesWrapper.className = "excludes-wrapper";
-            excludesWrapper.style.cssText =
-                "font-size: 20px;display: flex;align-items: center;font-weight: 700;flex-wrap: wrap;";
-            excludesWrapper.innerHTML = `<span>${excludes.description}：</span>`;
-            document.querySelector("#searchform")?.append(excludesWrapper);
-            document.querySelector(".threadlist")?.prepend(excludesWrapper);
-
-            removeSearchResult();
-
-            excludes.keywords.forEach((item) => {
-                const wrapper = document.querySelector(".excludes-wrapper");
-                const label = document.createElement("label");
-                label.className = "excludes-item";
-                label.style.cssText = "margin-right: 10px;";
-                label.innerHTML = `<input type="checkbox" style="margin-right: 5px;" value="${item}" ${checkedList.some((val) => item === val) ? "checked" : ""}/>${item}`;
-                wrapper?.appendChild(label);
-            });
-        }
-
-        // 删除重复的 wrapper（避免脚本重复执行导致重复渲染）
-        function removeDuplicateWrappers() {
-            const wrapperNodeList = document.querySelectorAll(".excludes-wrapper");
-            for (let i = wrapperNodeList.length - 1; i > 0; i--) {
-                wrapperNodeList[i].parentNode?.removeChild(wrapperNodeList[i]);
-            }
-        }
-
-        // 监听勾选状态
-        document
-            .querySelectorAll('.excludes-item input[type="checkbox"]')
-            .forEach((checkbox) => {
-                checkbox?.addEventListener("change", (e) => {
-                    const isChecked = e.target.checked;
-                    const checkedValue = e.target.value;
-                    if (isChecked) {
-                        checkedList.push(checkedValue);
-                    } else {
-                        checkedList = checkedList.filter((val) => val !== checkedValue);
-                    }
-                    // 数组去重
-                    checkedList = Array.from(new Set(checkedList));
-                    GM_setValue("checkedList", checkedList);
-                    removeSearchResult();
-                });
-            });
-
-        // 隐藏包含勾选关键词的元素
-        function removeSearchResult() {
-            const searchList = document.querySelectorAll(".threadlist ul li");
-            searchList.forEach((item) => {
-                const html = item.innerHTML.toLowerCase();
-                if (checkedList.some((val) => html.includes(val.toLowerCase()))) {
-                    item.style.display = "none";
-                } else {
-                    item.style.removeProperty("display");
-                }
-            });
-        }
     }
 
     /* ---------- 模块4：自动签到（状态机，跨页面） ---------- */
@@ -2053,6 +1925,8 @@
                 if (!firstCard) return;
 
                 threadList.dataset.n98FirstAdRemoved = "1";
+                // 先隐藏再移除，避免移除前的渲染闪现
+                firstCard.style.display = "none";
                 firstCard.remove();
             });
         }
@@ -2060,6 +1934,8 @@
         // 移除广告容器和帖子列表首条广告
         function removeAds() {
             document.querySelectorAll(AD_SELECTOR).forEach((ad) => {
+                // 先隐藏再移除，避免移除前的渲染闪现
+                ad.style.display = "none";
                 ad.remove();
             });
             removeFirstThreadAd();
@@ -2068,9 +1944,9 @@
         // 立即执行一次
         removeAds();
 
-        // 监听 DOM 变化（防抖避免频繁触发影响性能）
-        const debouncedRemoveAds = debounce(removeAds, 100);
-        const adObserver = new MutationObserver(debouncedRemoveAds);
+        // 监听 DOM 变化，及时处理动态插入的广告
+        // 不防抖：MutationObserver 回调本身是微任务，立即调用可把广告闪现窗口压到最小
+        const adObserver = new MutationObserver(removeAds);
         adObserver.observe(document.body, { childList: true, subtree: true });
     }
 
@@ -2095,9 +1971,6 @@
             initQuickReplyButton();
             initResourceLocator();
             initScrollTopFix();
-
-            // 搜索/我的页模块
-            initSearchHelper();
 
             // 登录页模块
             initAutoLogin();
