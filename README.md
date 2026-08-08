@@ -7,7 +7,7 @@
 | 脚本 | 版本 | 安装地址 |
 | --- | --- | --- |
 | BTSearch 移动端筛选修复 + 磁力直达 | 1.4.0 | https://rosenray.github.io/userscripts/btsearch-mobile-fix.user.js |
-| 链接检测 + TXT预览 | 6.3 | https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js |
+| 链接检测 + TXT预览 | 6.4 | https://rosenray.github.io/userscripts/link-detector-txt-preview.user.js |
 | 98手机网页浏览助手 | 2.5.3 | https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js |
 | 98论坛快捷导航 | 1.0.1 | https://rosenray.github.io/userscripts/98-forum-quick-nav.user.js |
 | 98论坛搜索增强预览 | 2.4.2 | https://rosenray.github.io/userscripts/98-forum-search-preview.user.js |
