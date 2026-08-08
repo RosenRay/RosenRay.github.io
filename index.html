@@ -229,6 +229,26 @@
       color: var(--green);
     }
 
+    .action.copy {
+      border: 1px dashed var(--line-strong);
+      background: var(--paper-soft);
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .action.copy:hover {
+      border-style: solid;
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .action.copy.copied {
+      border-style: solid;
+      border-color: var(--green);
+      color: var(--green);
+    }
+
     .catalog {
       margin-top: 18px;
     }
@@ -373,7 +393,7 @@
 
     .card-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
       grid-column: 1 / -1;
       margin-top: 2px;
@@ -695,6 +715,43 @@
         if (elB) elB.textContent = bridge ? 1 : 0;
       })
       .catch(() => {});
+
+    // 为每张脚本卡片注入"复制地址"按钮
+    const copyFallback = (text) => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    };
+
+    document.querySelectorAll('.script-card').forEach((card) => {
+      const installLink = card.querySelector('a.action.primary');
+      if (!installLink) return;
+      const url = new URL(installLink.getAttribute('href'), location.origin).href;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'action copy';
+      btn.textContent = '复制地址';
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch (e) {
+          copyFallback(url);
+        }
+        btn.classList.add('copied');
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = '复制地址';
+        }, 1500);
+      });
+      card.querySelector('.card-actions').appendChild(btn);
+    });
   </script>
 </body>
 </html>
+
