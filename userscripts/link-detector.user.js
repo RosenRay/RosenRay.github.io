@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.6
+// @version      6.7
 // @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       ray
 // @match        *://*/*
@@ -34,6 +34,9 @@
         // txtAutoScan: 页面加载完成后自动扫描 TXT 附件
         get txtAutoScan()  { return GM_getValue('txtAutoScan', true); },
         set txtAutoScan(v) { GM_setValue('txtAutoScan', v); },
+        // fabPos: FAB 悬浮按钮位置 { side: 'left'|'right', y: 距底部px }
+        get fabPos()  { return GM_getValue('fabPos', { side: 'right', y: 24 }); },
+        set fabPos(v) { GM_setValue('fabPos', v); },
     };
 
     // ─────────────────────────────────────────────
@@ -68,15 +71,19 @@
             z-index: 2147483640;
             width: 54px; height: 54px;
             border-radius: 50%; border: 1px solid rgba(17,24,39,0.10);
-            cursor: pointer;
+            cursor: grab;
             background: rgba(255,255,255,0.94);
             box-shadow: var(--lh-shadow-sm);
             color: var(--lh-text);
             display: flex; align-items: center; justify-content: center;
             transition: transform 0.2s, box-shadow 0.2s;
             -webkit-tap-highlight-color: transparent; outline: none;
+            touch-action: none;
+            user-select: none; -webkit-user-select: none;
         }
+        #lh-fab:active { cursor: grabbing; }
         #lh-fab:hover { transform: scale(1.06); box-shadow: 0 12px 32px rgba(17,24,39,0.18); }
+        #lh-fab.dragging { transition: none; transform: scale(1.1); box-shadow: 0 16px 40px rgba(17,24,39,0.24); cursor: grabbing; }
         #lh-fab:active { transform: scale(0.95); }
         #lh-fab.has-links::after {
             content: attr(data-count);
@@ -309,6 +316,18 @@
             .lh-footer-btn { min-height: 48px; font-size: 14px; }
             #lh-btn-copy-open { min-height: 52px; }
             #lh-toast { bottom: calc(88px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+
+            /* TXT 预览框：移动端全屏底部抽屉 */
+            .lh-txt-box {
+                left: 0 !important; right: 0 !important; top: auto !important;
+                bottom: 0; width: 100vw !important; max-height: 88vh !important; height: 88vh !important;
+                border-radius: 18px 18px 0 0;
+                border-left: none; border-right: none; border-bottom: none;
+            }
+            .lh-txt-resize { display: none; }
+            .lh-txt-header { cursor: default; }
+            .lh-txt-header:active { cursor: default; }
+            .lh-txt-body { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
         }
 
         /* 设置子面板 */
@@ -970,6 +989,13 @@
     fab.innerHTML = svgIcon(ICONS.search, 20);
     fab.setAttribute('aria-label', '链接检测'); fab.title = '链接检测';
     if (!CFG.btnVisible) fab.style.display = 'none';
+    // 恢复上次拖拽后的位置
+    (function () {
+        const pos = CFG.fabPos;
+        fab.style.bottom = Math.max(0, pos.y) + 'px';
+        if (pos.side === 'left') { fab.style.left = '16px'; fab.style.right = 'auto'; }
+        else { fab.style.right = '16px'; fab.style.left = 'auto'; }
+    })();
 
     const toast = document.createElement('div'); toast.id = 'lh-toast';
 
@@ -1076,12 +1102,31 @@
         if (f.length === 1 && openDownloadLink(f[0])) return;
         openDownloader();
     }
-    function normalizePanelPositionForViewport() {
-        if (innerWidth > 520) return;
+    // 面板弹出位置跟随 FAB 所在边缘
+    function alignPanelToFab() {
+        // 移动端全屏抽屉：不设置定位，交给 CSS (@media max-width:520px)
+        if (innerWidth <= 520) {
+            panel.style.left = '';
+            panel.style.right = '';
+            panel.style.bottom = '';
+            panel.style.top = '';
+            return;
+        }
+        const pos = CFG.fabPos;
+        const MARGIN = 14;
         panel.style.left = '';
         panel.style.right = '';
         panel.style.bottom = '';
         panel.style.top = '';
+        const y = Math.max(MARGIN, pos.y + 54 + 14);
+        panel.style.bottom = y + 'px';
+        if (pos.side === 'left') {
+            panel.style.left = MARGIN + 'px';
+            panel.style.right = 'auto';
+        } else {
+            panel.style.right = MARGIN + 'px';
+            panel.style.left = 'auto';
+        }
     }
     function renderMagnetList() {
         const list = document.getElementById('lh-list');
@@ -1314,12 +1359,64 @@
     // ─────────────────────────────────────────────
     //  磁力面板事件
     // ─────────────────────────────────────────────
+    // FAB 拖拽 + 边缘吸附 + 位置持久化
+    let fabWasDragged = false; // 拖拽后抑制误触发的 click 打开面板
+    (function () {
+        let drag = false, moved = false, sx, sy, ox, oy;
+        const FAB_SIZE = 54, MARGIN = 16, DRAG_THRESHOLD = 8;
+        fab.addEventListener('pointerdown', e => {
+            if (e.button !== undefined && e.button !== 0) return;
+            drag = true; moved = false;
+            sx = e.clientX; sy = e.clientY;
+            const r = fab.getBoundingClientRect();
+            ox = r.left; oy = r.top;
+            fab.style.transition = 'none';
+            fab.classList.add('dragging');
+            try { fab.setPointerCapture(e.pointerId); } catch (err) {}
+            e.preventDefault();
+        });
+        document.addEventListener('pointermove', e => {
+            if (!drag) return;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) moved = true;
+            if (moved) {
+                const nLeft = Math.max(MARGIN, Math.min(innerWidth - FAB_SIZE - MARGIN, ox + dx));
+                const nTop  = Math.max(MARGIN, Math.min(innerHeight - FAB_SIZE - MARGIN, oy + dy));
+                fab.style.left = nLeft + 'px';
+                fab.style.top  = nTop  + 'px';
+                fab.style.right = 'auto'; fab.style.bottom = 'auto';
+            }
+        });
+        document.addEventListener('pointerup', () => {
+            if (!drag) return;
+            drag = false;
+            fab.classList.remove('dragging');
+            fab.style.transition = '';
+            if (moved) {
+                fabWasDragged = true;
+                // 边缘吸附 + 记忆位置
+                const r = fab.getBoundingClientRect();
+                const centerX = r.left + r.width / 2;
+                const side = centerX < innerWidth / 2 ? 'left' : 'right';
+                const y = Math.max(0, innerHeight - r.bottom - MARGIN);
+                fab.style.top = 'auto';
+                fab.style.bottom = y + 'px';
+                if (side === 'left') { fab.style.left = MARGIN + 'px'; fab.style.right = 'auto'; }
+                else { fab.style.right = MARGIN + 'px'; fab.style.left = 'auto'; }
+                CFG.fabPos = { side, y };
+                // 拖拽结束后延迟清除标志，覆盖随后触发的 click
+                setTimeout(() => { fabWasDragged = false; }, 0);
+            }
+        });
+    })();
+
     fab.onclick = () => {
+        if (fabWasDragged) return; // 拖拽后不触发打开面板
         const isOpen = panel.classList.contains('visible');
         if (isOpen) {
             panel.classList.remove('visible');
         } else {
-            normalizePanelPositionForViewport();
+            alignPanelToFab();
             panel.classList.add('visible');
             if (!CFG.cacheResult || !hasScannedOnce) doMagnetScan();
             txtPreview.autoFetch();
@@ -1573,6 +1670,8 @@
         },
 
         positionBox(btn, box) {
+            // 移动端全屏抽屉：不设置定位，由 CSS 全屏铺开
+            if (window.innerWidth <= 520) return;
             const btnRect = btn.getBoundingClientRect();
             const vw = window.innerWidth, vh = window.innerHeight;
             // 底部安全边距：兼容手机底部导航栏/工具栏，保留 env(safe-area-inset-bottom) 或至少 20px
@@ -1607,6 +1706,8 @@
         },
 
         makeDraggable(box, handle) {
+            // 移动端全屏抽屉不需要拖动
+            if (window.innerWidth <= 520) return;
             let drag = false, sx, sy, ox, oy;
             handle.addEventListener('pointerdown', e => {
                 if (e.target.closest('button')) return;
@@ -1625,6 +1726,8 @@
         },
 
         makeResizable(box, handle) {
+            // 移动端全屏抽屉不需要调整大小
+            if (window.innerWidth <= 520) return;
             let drag = false, sx, sy, ow, oh;
             handle.addEventListener('pointerdown', e => {
                 drag = true; handle.setPointerCapture(e.pointerId);
@@ -1696,12 +1799,12 @@
     GM_registerMenuCommand('打开链接检测', () => {
         fab.style.display = '';
         if (!panel.classList.contains('visible')) {
-            normalizePanelPositionForViewport();
+            alignPanelToFab();
             panel.classList.add('visible');
             if (!CFG.cacheResult || !hasScannedOnce) doMagnetScan();
         }
     });
-    GM_registerMenuCommand('🔄 重新扫描链接', () => { normalizePanelPositionForViewport(); panel.classList.add('visible'); doMagnetScan(); });
+    GM_registerMenuCommand('🔄 重新扫描链接', () => { alignPanelToFab(); panel.classList.add('visible'); doMagnetScan(); });
     GM_registerMenuCommand('📄 扫描 TXT 附件', () => txtPreview.scanPage());
 
     // ─────────────────────────────────────────────
