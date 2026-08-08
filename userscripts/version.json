@@ -23,7 +23,7 @@
     {
       "name": "链接检测 + TXT预览",
       "file": "link-detector.user.js",
-      "version": "6.7",
+      "version": "6.8",
       "description": "全面扫描磁力/ED2K 链接，支持 TXT 附件预览、btsearch.love 条目信息识别，并在 Android 上通过 LinkHunterBridge 打开单条链接。",
       "installURL": "https://rosenray.github.io/userscripts/link-detector.user.js",
       "updateURL": "https://rosenray.github.io/userscripts/link-detector.user.js",
