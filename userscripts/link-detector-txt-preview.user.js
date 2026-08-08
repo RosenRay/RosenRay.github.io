@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         链接检测 + TXT预览
 // @namespace    http://tampermonkey.net/
-// @version      6.3
+// @version      6.4
 // @description  全面扫描磁力/ED2K链接 + 页面TXT附件快速预览；Android 上单条链接可通过 LinkHunterBridge 直达 115 下载入口
 // @author       YourName (重构: Claude)
 // @match        *://*/*
@@ -1318,6 +1318,7 @@
             normalizePanelPositionForViewport();
             panel.classList.add('visible');
             if (!CFG.cacheResult || !hasScannedOnce) doMagnetScan();
+            txtPreview.autoFetch();
         }
     };
     panel.querySelector('#lh-btn-close').onclick = () => panel.classList.remove('visible');
@@ -1407,6 +1408,8 @@
             btn.innerHTML = svgIcon(ICONS.file, 11) + ' 预览';
             btn.title = `预览 ${fileName}`;
             btn.onclick = e => { e.preventDefault(); e.stopPropagation(); this.toggle(linkEl, btn, fileName); };
+            btn._linkEl = linkEl;
+            btn._fileName = fileName;
             linkEl.insertAdjacentElement('afterend', btn);
         },
 
@@ -1421,9 +1424,10 @@
             }
         },
 
-        fetch(url, btn, fileName) {
+        fetch(url, btn, fileName, isAuto = false) {
             btn.classList.add('loading');
             btn.innerHTML = `<span class="lh-spinner" style="width:10px;height:10px;border-width:1.5px;"></span> 加载中`;
+            if (isAuto) showToast(`📄 正在下载 ${fileName}…`, 2000);
 
             GM_xmlhttpRequest({
                 method: 'GET', url, responseType: 'arraybuffer',
@@ -1435,6 +1439,7 @@
                         const { text, encoding } = this.decode(res.response);
                         const errorText = this.extractErrorText(text);
                         this.showBox(errorText || text, btn, fileName, encoding, !!errorText);
+                        if (isAuto) showToast(`✓ ${fileName} 预览已就绪`, 1800);
                     } else {
                         btn.innerHTML = svgIcon(ICONS.file, 11) + ' 预览失败';
                         showToast(`加载失败 (${res.status})`);
@@ -1577,6 +1582,30 @@
             document.addEventListener('pointerup', () => { drag = false; });
         },
 
+        // 自动下载并预览 TXT 附件（页面加载或磁力面板触发时调用）
+        autoFetch() {
+            if (this._autoFetching) return;
+            this._autoFetching = true;
+
+            this.scanPage();
+
+            const triggers = document.querySelectorAll('.lh-txt-trigger');
+            const pending = Array.from(triggers).filter(t => !t._fetched && !(t._box && document.body.contains(t._box)));
+
+            if (pending.length === 0) {
+                this._autoFetching = false;
+                return;
+            }
+
+            showToast(`📄 正在下载 ${pending.length} 个 TXT 附件…`, 2500);
+            pending.forEach(btn => {
+                btn._fetched = true;
+                this.fetch(btn._linkEl.href, btn, btn._fileName, true);
+            });
+
+            this._autoFetching = false;
+        },
+
         // 扫描页面中的 TXT 附件链接并注入按钮
         scanPage() {
             const seen = new Set();
@@ -1597,7 +1626,7 @@
 
         // 启动（含 MutationObserver 监听动态加载）
         start() {
-            this.scanPage();
+            this.autoFetch();
             const ob = new MutationObserver(() => this.scanPage());
             ob.observe(document.body, { childList: true, subtree: true });
         }
