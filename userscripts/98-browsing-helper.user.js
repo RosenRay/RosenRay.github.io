@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         98手机网页浏览助手
 // @namespace    http://tampermonkey.net/
-// @version      2.5.4
+// @version      2.5.5
 // @description  98堂手机网页版辅助工具：屏蔽帖子列表首条广告、隐藏置顶帖、优化排序文字、复制代码、自动签到、一键评分、一键回复、回复后刷新隐藏内容、资源定位、自动登录、置顶修复 - UI增强版
 // @author       ray
 // @license      MIT
@@ -11,6 +11,10 @@
 // @match        *://*/plugin.php*
 // @match        *://*/member.php*
 // @match        *://*/search.php*
+// @match        *://*/misc.php*
+// @match        *://*/thread-*
+// @match        *://*/forum-*
+// @match        *://*/space-*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -71,9 +75,13 @@
     ];
 
     // 当前页面类型判断（一次计算，多处复用）
+    // 兼容 Discuz 伪静态地址：帖子详情 thread-xx-1-1.html、版块列表 forum-xx-1.html
     const URL = location.href;
+    const PATH = location.pathname;
+    const IS_TIMELINE = /\/thread-\d+-\d+-\d+\.html/.test(PATH); // 伪静态帖子详情
+    const IS_FORUM_SLUG = /\/forum-\d+-\d+\.html/.test(PATH);    // 伪静态版块列表
     const IS_PORTAL = URL.includes("portal.php");
-    const IS_FORUM = URL.includes("forum.php");
+    const IS_FORUM = URL.includes("forum.php") || IS_TIMELINE || IS_FORUM_SLUG;
     const IS_HOME = URL.includes("home.php");
     const IS_SEARCH = URL.includes("search.php");
     const IS_MEMBER = URL.includes("member.php");
@@ -86,9 +94,10 @@
     // 顶部/底部广告容器选择器（class 为 show-text cl 的 div）
     const AD_SELECTOR = "div.show-text.cl";
 
-    // 是否为论坛帖子列表页（forumdisplay）
+    // 是否为论坛帖子列表页（forumdisplay）：兼容伪静态 forum-xx-1.html
     const IS_FORUM_DISPLAY =
-        IS_FORUM && new URLSearchParams(location.search).get("mod") === "forumdisplay";
+        (IS_FORUM && new URLSearchParams(location.search).get("mod") === "forumdisplay") ||
+        IS_FORUM_SLUG;
 
     // 尽早用 CSS 隐藏顶部/底部广告，避免渲染后再被 JS 移除造成"闪现"
     // 说明：display:none 在样式应用帧即生效，比等待 DOM 就绪后 remove() 更早、更平滑
@@ -1077,7 +1086,12 @@
      */
     function getThreadId(urlValue = location.href) {
         try {
-            return new globalThis.URL(urlValue, location.href).searchParams.get("tid") || "";
+            const u = new globalThis.URL(urlValue, location.href);
+            const fromParam = u.searchParams.get("tid");
+            if (fromParam) return fromParam;
+            // 兼容伪静态地址 thread-xxx-1-1.html
+            const m = u.pathname.match(/\/thread-(\d+)-\d+-\d+\.html/);
+            return m ? m[1] : "";
         } catch (e) {
             return "";
         }
@@ -1090,7 +1104,12 @@
     function buildQuickReplyOriginUrl() {
         try {
             const url = new globalThis.URL(location.href);
-            const tid = url.searchParams.get("tid");
+            let tid = url.searchParams.get("tid");
+            // 兼容伪静态地址 thread-xxx-1-1.html
+            if (!tid) {
+                const m = url.pathname.match(/\/thread-(\d+)-\d+-\d+\.html/);
+                tid = m ? m[1] : "";
+            }
             if (!tid) return "";
 
             url.searchParams.set("mod", "viewthread");
