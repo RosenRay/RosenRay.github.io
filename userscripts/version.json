@@ -23,12 +23,12 @@
     {
       "name": "98手机网页浏览助手",
       "file": "98-mobile-browsing-helper.user.js",
-      "version": "2.4",
-      "description": "98堂手机网页版辅助工具，整合列表去广告、搜索过滤、签到、评分、回复、资源定位和登录辅助。",
+      "version": "2.5.3",
+      "description": "98堂手机网页版辅助工具，整合列表去广告、搜索过滤、签到、评分、回复、回复后刷新隐藏内容、资源定位和登录辅助。",
       "installURL": "https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js",
       "updateURL": "https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js",
       "downloadURL": "https://rosenray.github.io/userscripts/98-mobile-browsing-helper.user.js",
-      "updatedAt": "2026-08-01"
+      "updatedAt": "2026-08-08"
     },
     {
       "name": "98论坛快捷导航",
