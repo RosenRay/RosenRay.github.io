@@ -3,7 +3,7 @@
 // @namespace    https://seju.life/
 // @version      1.0
 // @description  过滤色聚网站的置顶推荐广告及最新发布中的外链广告条目
-// @author       you
+// @author       ray
 // @match        https://seju.life/*
 // @match        https://seju.live/*
 // @match        https://se114.org/*
