@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         98手机网页浏览助手
 // @namespace    http://tampermonkey.net/
-// @version      2.5.5
+// @version      2.5.6
 // @description  98堂手机网页版辅助工具：屏蔽帖子列表首条广告、隐藏置顶帖、优化排序文字、复制代码、自动签到、一键评分、一键回复、回复后刷新隐藏内容、资源定位、自动登录、置顶修复 - UI增强版
 // @author       ray
 // @license      MIT
@@ -18,6 +18,7 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_addStyle
 // @updateURL    https://rosenray.github.io/userscripts/98-browsing-helper.user.js
 // @downloadURL  https://rosenray.github.io/userscripts/98-browsing-helper.user.js
 // ==/UserScript==
