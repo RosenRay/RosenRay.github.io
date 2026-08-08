@@ -1,6 +1,16 @@
 {
   "scripts": [
     {
+      "name": "115批量解压",
+      "file": "115-batch-unzip.user.js",
+      "version": "8.10",
+      "description": "批量解压115网盘压缩包，支持体积校验：若解压后总大小小于原始压缩包则标记解压不全并拦截删除，面板支持鼠标拖拽滑动。",
+      "installURL": "https://rosenray.github.io/userscripts/115-batch-unzip.user.js",
+      "updateURL": "https://rosenray.github.io/userscripts/115-batch-unzip.user.js",
+      "downloadURL": "https://rosenray.github.io/userscripts/115-batch-unzip.user.js",
+      "updatedAt": "2026-08-08"
+    },
+    {
       "name": "BTSearch 筛选修复 + 磁力直达",
       "file": "btsearch-fix.user.js",
       "version": "1.4.0",
