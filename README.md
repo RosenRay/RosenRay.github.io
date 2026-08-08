@@ -6,6 +6,7 @@
 
 | 脚本 | 版本 | 安装地址 |
 | --- | --- | --- |
+| 115批量解压 | 8.10 | https://rosenray.github.io/userscripts/115-batch-unzip.user.js |
 | BTSearch 筛选修复 + 磁力直达 | 1.4.0 | https://rosenray.github.io/userscripts/btsearch-fix.user.js |
 | 链接检测 + TXT预览 | 6.6 | https://rosenray.github.io/userscripts/link-detector.user.js |
 | 98手机浏览助手 | 2.5.3 | https://rosenray.github.io/userscripts/98-browsing-helper.user.js |
@@ -31,6 +32,7 @@ RosenRay.github.io
 ├── index.html
 ├── README.md
 └── userscripts
+    ├── 115-batch-unzip.user.js
     ├── btsearch-fix.user.js
     ├── link-detector.user.js
     ├── link-detector-bridge.user.js
