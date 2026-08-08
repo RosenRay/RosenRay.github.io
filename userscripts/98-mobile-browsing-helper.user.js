@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         98手机网页浏览助手
 // @namespace    http://tampermonkey.net/
-// @version      2.4
-// @description  98堂手机网页版辅助工具：屏蔽帖子列表首条广告、隐藏置顶帖、优化排序文字、复制代码、搜索过滤、自动签到、一键评分、一键回复、资源定位、自动登录、置顶修复 - UI增强版
+// @version      2.5.3
+// @description  98堂手机网页版辅助工具：屏蔽帖子列表首条广告、隐藏置顶帖、优化排序文字、复制代码、搜索过滤、自动签到、一键评分、一键回复、回复后刷新隐藏内容、资源定位、自动登录、置顶修复 - UI增强版
 // @author       bbbyqq
 // @license      MIT
 // @match        *://*/portal.php*
@@ -1182,39 +1182,283 @@
         }
     }
 
-    /* ---------- 模块5：一键回复自动执行（状态机，跨页面） ---------- */
+    /* ---------- 模块5：帖子详情页后台快速回复 ---------- */
+
+    // 回复完成后使用的一次性参数，用于强制重新请求主题详情并显示成功提示
+    const QUICK_REPLY_REFRESH_PARAM = "n98_reply_refresh";
 
     /**
-     * 检查一键回复状态，在回复页面自动填入文案并提交
-     * 与"一键回复按钮"配合，通过 GM_setValue 跨页面传递数据
+     * 清理旧版本遗留的一键回复跨页面状态。
+     * 2.5.3 起不再跳转到回复编辑页，避免回复页进入浏览器历史记录。
      */
-    function initQuickReplyAutoSubmit() {
-        const quickReplyMode = GM_getValue("quickReplyMode", false);
-        const quickReplyText = GM_getValue("quickReplyText", "");
+    function clearQuickReplyState() {
+        GM_setValue("quickReplyMode", false);
+        GM_setValue("quickReplyText", "");
+        GM_setValue("quickReplyOriginUrl", "");
+        GM_setValue("quickReplyTid", "");
+        GM_setValue("quickReplyStartedAt", 0);
+        GM_setValue("quickReplySubmitted", false);
+    }
 
+    /**
+     * 从主题链接中读取 tid
+     */
+    function getThreadId(urlValue = location.href) {
         try {
-            if (IS_FORUM && quickReplyMode && quickReplyText) {
-                // 回复主题页面
-                if (document.querySelector("#postform")) {
-                    const messageInput = document.querySelector("#needmessage");
-                    const submitBtn = document.querySelector("#postsubmit");
-                    if (messageInput && submitBtn) {
-                        messageInput.value = quickReplyText;
-                        submitBtn.className = "btn_pn btn_pn_blue";
-                        submitBtn.setAttribute("disable", false);
-                        submitBtn.click();
-                        // 清除一键回复状态
-                        GM_setValue("quickReplyMode", false);
-                        GM_setValue("quickReplyText", "");
-                        showAlert.success("一键回复已发送", 2000);
+            return new globalThis.URL(urlValue, location.href).searchParams.get("tid") || "";
+        } catch (e) {
+            return "";
+        }
+    }
+
+    /**
+     * 生成回复完成后应刷新的主题详情地址。
+     * 保留 mobile/extra 等上下文，但移除评论定位参数与锚点，回到主题第一页。
+     */
+    function buildQuickReplyOriginUrl() {
+        try {
+            const url = new globalThis.URL(location.href);
+            const tid = url.searchParams.get("tid");
+            if (!tid) return "";
+
+            url.searchParams.set("mod", "viewthread");
+            url.searchParams.set("tid", tid);
+            url.searchParams.delete("pid");
+            url.searchParams.delete("page");
+            url.searchParams.delete("goto");
+            url.searchParams.delete(QUICK_REPLY_REFRESH_PARAM);
+            url.hash = "";
+            return url.href;
+        } catch (e) {
+            return "";
+        }
+    }
+
+    /**
+     * 返回详情页后移除一次性刷新参数，并显示成功提示。
+     */
+    function handleQuickReplyRefreshNotice() {
+        try {
+            const url = new globalThis.URL(location.href);
+            if (!url.searchParams.has(QUICK_REPLY_REFRESH_PARAM)) return;
+
+            url.searchParams.delete(QUICK_REPLY_REFRESH_PARAM);
+            history.replaceState(null, document.title, url.href);
+            showAlert.success("回复成功，帖子内容已刷新", 3000);
+        } catch (e) {
+            console.warn("[98助手] 清理回复刷新参数失败:", e);
+        }
+    }
+
+    /**
+     * 在当前帖子详情页中创建隐藏 iframe，加载独立回复页并在 iframe 内提交。
+     * 顶层页面不会进入回复编辑页或评论结果页，因此浏览器历史始终保持：
+     * 帖子列表 -> 当前帖子详情。
+     */
+    function submitQuickReplyFromThread(replyHref, quickReplyText, originUrl, originTid, triggerBtn) {
+        if (document.getElementById("n98_quick_reply_frame")) {
+            showAlert.info("回复正在提交，请稍候", 2000);
+            return;
+        }
+
+        const iframe = document.createElement("iframe");
+        iframe.id = "n98_quick_reply_frame";
+        iframe.name = "n98_quick_reply_frame";
+        iframe.setAttribute("aria-hidden", "true");
+        iframe.style.cssText = `
+            position: fixed;
+            left: -10000px;
+            top: -10000px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            border: 0;
+            pointer-events: none;
+        `;
+
+        let stage = "loading-form";
+        let finished = false;
+        let timeoutId = 0;
+
+        const setBusy = (busy) => {
+            if (!triggerBtn) return;
+            triggerBtn.style.pointerEvents = busy ? "none" : "";
+            triggerBtn.style.opacity = busy ? "0.65" : "";
+            triggerBtn.setAttribute("aria-busy", busy ? "true" : "false");
+        };
+
+        const cleanup = () => {
+            clearTimeout(timeoutId);
+            iframe.remove();
+            setBusy(false);
+        };
+
+        const fail = (message) => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            showAlert.error(message || "回复失败，请稍后重试", 5000);
+        };
+
+        const finishSuccess = () => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+
+            const returnUrl = new globalThis.URL(originUrl, location.href);
+            returnUrl.searchParams.set(QUICK_REPLY_REFRESH_PARAM, String(Date.now()));
+            returnUrl.hash = "";
+
+            // 当前顶层仍是原详情页，replace 只刷新当前历史项；返回键会直接回到帖子列表。
+            location.replace(returnUrl.href);
+        };
+
+        const getFrameContext = () => {
+            try {
+                return {
+                    href: iframe.contentWindow?.location?.href || "",
+                    doc: iframe.contentDocument || iframe.contentWindow?.document || null,
+                };
+            } catch (e) {
+                return { href: "", doc: null, error: e };
+            }
+        };
+
+        const getResponseText = (doc) =>
+            (doc?.body?.innerText || "").replace(/\s+/g, " ").trim();
+
+        const detectExplicitError = (doc) => {
+            const responseText = getResponseText(doc);
+            const errorEl = doc?.querySelector(
+                ".alert_error, .seccheck, .sec_code, input[name='secanswer'], input[name='seccodeverify']"
+            );
+            const hasErrorText = /验证码|安全验证|无权|没有权限|回复失败|提交失败|内容不能为空|两次发表间隔|灌水|尚未登录|请先登录|登录后/i.test(
+                responseText
+            );
+
+            if (!errorEl && !hasErrorText) return "";
+            return (
+                errorEl?.innerText?.replace(/\s+/g, " ").trim() ||
+                responseText.slice(0, 140) ||
+                "回复未成功，请稍后重试"
+            );
+        };
+
+        iframe.addEventListener("load", () => {
+            if (finished) return;
+
+            const { href: frameHref, doc: frameDoc, error } = getFrameContext();
+            if (error) {
+                fail("无法读取回复页面，请检查登录状态后重试");
+                return;
+            }
+            if (!frameHref || frameHref === "about:blank" || !frameDoc) return;
+
+            try {
+                const frameUrl = new globalThis.URL(frameHref, location.href);
+                const frameTid = frameUrl.searchParams.get("tid") || "";
+                const hasReplyForm = Boolean(frameDoc.querySelector("#postform"));
+                const explicitError = detectExplicitError(frameDoc);
+
+                if (stage === "loading-form") {
+                    if (explicitError && !hasReplyForm) {
+                        fail(explicitError);
+                        return;
+                    }
+
+                    const form = frameDoc.querySelector("#postform");
+                    const messageInput = frameDoc.querySelector("#needmessage");
+                    const submitBtn = frameDoc.querySelector("#postsubmit");
+
+                    if (!form || !messageInput || !submitBtn) {
+                        const pageText = getResponseText(frameDoc);
+                        if (/会员登录|用户名|密码/.test(pageText)) {
+                            fail("登录状态已失效，请重新登录后再回复");
+                        } else {
+                            fail("未找到回复表单，请打开帖子确认当前账号可以回复");
+                        }
+                        return;
+                    }
+
+                    messageInput.value = quickReplyText;
+                    const FrameEvent = iframe.contentWindow?.Event || globalThis.Event;
+                    messageInput.dispatchEvent(new FrameEvent("input", { bubbles: true }));
+                    messageInput.dispatchEvent(new FrameEvent("change", { bubbles: true }));
+
+                    // 原生 form.submit() 不会自动携带提交按钮的 name/value，需要手动补齐。
+                    if (submitBtn.name) {
+                        let submitValueInput = form.querySelector('input[data-n98-submit-value="1"]');
+                        if (!submitValueInput) {
+                            submitValueInput = frameDoc.createElement("input");
+                            submitValueInput.type = "hidden";
+                            submitValueInput.dataset.n98SubmitValue = "1";
+                            form.appendChild(submitValueInput);
+                        }
+                        submitValueInput.name = submitBtn.name;
+                        submitValueInput.value = submitBtn.value || "true";
+                    }
+
+                    stage = "submitted";
+
+                    // 强制在 iframe 自身提交，并绕过站点按钮脚本可能执行的 top.location 跳转。
+                    // 显式使用 _self，避免页面中的 <base target> 把表单提交到顶层窗口。
+                    form.setAttribute("target", "_self");
+                    submitBtn.setAttribute("formtarget", "_self");
+                    const nativeSubmit = iframe.contentWindow?.HTMLFormElement?.prototype?.submit;
+                    if (typeof nativeSubmit !== "function") {
+                        fail("当前浏览器不支持后台提交，请稍后重试");
+                        return;
+                    }
+                    nativeSubmit.call(form);
+                    return;
+                }
+
+                if (stage === "submitted") {
+                    const isThreadResult =
+                        frameUrl.pathname.endsWith("forum.php") &&
+                        frameUrl.searchParams.get("mod") === "viewthread" &&
+                        frameTid === originTid &&
+                        !hasReplyForm;
+
+                    if (isThreadResult) {
+                        finishSuccess();
+                        return;
+                    }
+
+                    if (explicitError) {
+                        fail(explicitError);
+                        return;
+                    }
+
+                    // Discuz 可能先返回带 JS/meta 跳转的成功提示页，再进入主题页。
+                    // 只要页面明确提示回复成功，也可以直接刷新原主题验证隐藏内容。
+                    const responseText = getResponseText(frameDoc);
+                    if (/回复发布成功|回复成功|发布成功|正在转入主题/i.test(responseText)) {
+                        finishSuccess();
                     }
                 }
+            } catch (e) {
+                console.error("[98助手] 后台回复处理异常:", e);
+                fail("回复结果识别失败，请稍后重试");
             }
-        } catch (e) {
-            console.error("[98助手] 一键回复自动提交异常:", e);
-            GM_setValue("quickReplyMode", false);
-            GM_setValue("quickReplyText", "");
-        }
+        });
+
+        setBusy(true);
+        showAlert.info("正在后台回复并刷新帖子…", 2500);
+        document.body.appendChild(iframe);
+        iframe.src = new globalThis.URL(replyHref, location.href).href;
+
+        timeoutId = setTimeout(() => {
+            fail("回复提交超时，请检查网络或登录状态后重试");
+        }, 25000);
+    }
+
+    /**
+     * 初始化回复刷新提示，并清理旧版本可能残留的跨页面状态。
+     */
+    function initQuickReplyAutoSubmit() {
+        handleQuickReplyRefreshNotice();
+        clearQuickReplyState();
     }
 
     /* ---------- 模块6：一键评分（forum.php） ---------- */
@@ -1276,7 +1520,7 @@
     /**
      * 将底部"参与回复"按钮改为"一键回复"
      * 点击后弹出预置文案选择（含"自行编辑回复"选项）
-     * 选择后跳转到回复页面，由模块5自动完成提交
+     * 选择后由模块5在当前详情页后台完成回复，不进入独立回复页面
      */
     function initQuickReplyButton() {
         if (!IS_FORUM) return;
@@ -1310,16 +1554,29 @@
 
             const replyTexts = GM_getValue("replyTexts", DEFAULT_REPLY_TEXTS);
             createReplyPicker(replyTexts, function (selectedText) {
-                // 保存回复文案到缓存，跨页面传递
-                GM_setValue("quickReplyText", selectedText);
-                GM_setValue("quickReplyMode", true);
-                // 跳转到回复页面
-                if (replyHref) {
-                    location.href = replyHref;
-                } else {
+                const originUrl = buildQuickReplyOriginUrl();
+                const originTid = getThreadId(originUrl);
+
+                if (!replyHref) {
                     showAlert.error("未找到回复链接", 2000);
-                    GM_setValue("quickReplyMode", false);
+                    clearQuickReplyState();
+                    return;
                 }
+                if (!originUrl || !originTid) {
+                    showAlert.error("无法识别当前帖子地址", 2000);
+                    clearQuickReplyState();
+                    return;
+                }
+
+                // 直接在当前详情页后台加载回复表单并提交，不产生任何回复页历史记录。
+                clearQuickReplyState();
+                submitQuickReplyFromThread(
+                    replyHref,
+                    selectedText,
+                    originUrl,
+                    originTid,
+                    newBtn
+                );
             });
         });
 
