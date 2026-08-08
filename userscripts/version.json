@@ -33,7 +33,7 @@
     {
       "name": "98手机浏览助手",
       "file": "98-browsing-helper.user.js",
-      "version": "2.5.4",
+      "version": "2.5.5",
       "description": "98堂手机网页版辅助工具，整合列表去广告、搜索过滤、签到、评分、回复、回复后刷新隐藏内容、资源定位和登录辅助。",
       "installURL": "https://rosenray.github.io/userscripts/98-browsing-helper.user.js",
       "updateURL": "https://rosenray.github.io/userscripts/98-browsing-helper.user.js",
