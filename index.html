@@ -497,15 +497,15 @@
         </div>
         <div class="status-strip" aria-label="脚本状态">
           <div class="status-item">
-            <span class="status-value">6</span>
+            <span class="status-value" id="stat-scripts">-</span>
             <span class="status-label">展示脚本</span>
           </div>
           <div class="status-item">
-            <span class="status-value">6.6</span>
+            <span class="status-value" id="stat-link-detector">-</span>
             <span class="status-label">链接检测</span>
           </div>
           <div class="status-item">
-            <span class="status-value">1</span>
+            <span class="status-value" id="stat-bridge">-</span>
             <span class="status-label">兼容入口</span>
           </div>
         </div>
@@ -532,7 +532,7 @@
         <article class="script-card" data-category="clean">
           <div class="script-icon search" aria-hidden="true">BT</div>
           <div>
-            <h3>BTSearch 移动端筛选修复 + 磁力直达</h3>
+            <h3>BTSearch 筛选修复 + 磁力直达</h3>
             <p class="desc">修复筛选后无法再次打开的问题，复制按钮改为磁力直达，并过滤筛选区下方广告。</p>
             <div class="badges">
               <span class="badge">版本 1.4.0</span>
@@ -541,8 +541,8 @@
             </div>
           </div>
           <div class="card-actions">
-            <a class="action primary" href="./userscripts/btsearch-mobile-fix.user.js">安装</a>
-            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-mobile-fix.user.js">源码</a>
+            <a class="action primary" href="./userscripts/btsearch-fix.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/btsearch-fix.user.js">源码</a>
           </div>
         </article>
 
@@ -558,15 +558,15 @@
             </div>
           </div>
           <div class="card-actions">
-            <a class="action primary" href="./userscripts/link-detector-txt-preview.user.js">安装</a>
-            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector-txt-preview.user.js">源码</a>
+            <a class="action primary" href="./userscripts/link-detector.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/link-detector.user.js">源码</a>
           </div>
         </article>
 
         <article class="script-card" data-category="forum">
           <div class="script-icon forum" aria-hidden="true">98</div>
           <div>
-            <h3>98手机网页浏览助手</h3>
+            <h3>98手机浏览助手</h3>
             <p class="desc">整合列表去广告、搜索过滤、签到、评分、回复、回复后刷新隐藏内容、资源定位和登录辅助。</p>
             <div class="badges">
               <span class="badge">版本 2.5.3</span>
@@ -575,15 +575,15 @@
             </div>
           </div>
           <div class="card-actions">
-            <a class="action primary" href="./userscripts/98-mobile-browsing-helper.user.js">安装</a>
-            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-mobile-browsing-helper.user.js">源码</a>
+            <a class="action primary" href="./userscripts/98-browsing-helper.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-browsing-helper.user.js">源码</a>
           </div>
         </article>
 
         <article class="script-card" data-category="forum">
           <div class="script-icon forum" aria-hidden="true">98</div>
           <div>
-            <h3>98论坛快捷导航</h3>
+            <h3>98快捷导航</h3>
             <p class="desc">在手机版论坛首页左侧分类栏下方增加“综合讨论区 · 最新”和“网友原创区 · 最新”入口。</p>
             <div class="badges">
               <span class="badge">版本 1.0.1</span>
@@ -592,15 +592,15 @@
             </div>
           </div>
           <div class="card-actions">
-            <a class="action primary" href="./userscripts/98-forum-quick-nav.user.js">安装</a>
-            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-forum-quick-nav.user.js">源码</a>
+            <a class="action primary" href="./userscripts/98-quick-nav.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-quick-nav.user.js">源码</a>
           </div>
         </article>
 
         <article class="script-card" data-category="forum">
           <div class="script-icon forum" aria-hidden="true">98</div>
           <div>
-            <h3>98论坛搜索增强预览</h3>
+            <h3>98搜索增强预览</h3>
             <p class="desc">优化 98 论坛搜索结果展示，支持紧凑预览、过滤规则、浏览记录和手机版搜索提示页。</p>
             <div class="badges">
               <span class="badge">版本 2.4.2</span>
@@ -609,8 +609,8 @@
             </div>
           </div>
           <div class="card-actions">
-            <a class="action primary" href="./userscripts/98-forum-search-preview.user.js">安装</a>
-            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-forum-search-preview.user.js">源码</a>
+            <a class="action primary" href="./userscripts/98-search-preview.user.js">安装</a>
+            <a class="action secondary" href="https://raw.githubusercontent.com/RosenRay/RosenRay.github.io/master/userscripts/98-search-preview.user.js">源码</a>
           </div>
         </article>
 
@@ -655,6 +655,23 @@
         });
       });
     });
+
+    // 动态读取 version.json 填充状态条
+    fetch('./userscripts/version.json')
+      .then(r => r.json())
+      .then(data => {
+        const scripts = data.scripts || [];
+        const displayed = scripts.filter(s => !s.name.includes('Bridge'));
+        const ld = scripts.find(s => s.file.includes('link-detector') && !s.file.includes('bridge'));
+        const bridge = scripts.find(s => s.name.includes('Bridge'));
+        const elS = document.getElementById('stat-scripts');
+        const elL = document.getElementById('stat-link-detector');
+        const elB = document.getElementById('stat-bridge');
+        if (elS) elS.textContent = displayed.length;
+        if (elL) elL.textContent = ld ? ld.version : '-';
+        if (elB) elB.textContent = bridge ? 1 : 0;
+      })
+      .catch(() => {});
   </script>
 </body>
 </html>
